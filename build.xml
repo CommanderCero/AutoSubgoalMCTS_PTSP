@@ -1,0 +1,53 @@
+<project name="ptsp" default="compile" basedir=".">
+  <description>The Physical Travelling Salesman Problem Competition</description>
+  <property name="src" location="src"/>
+  <property name="out" location="out"/>
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${out}"/>
+  </target>
+  <target name="compile" depends="init">
+    <javac srcdir="${src}" destdir="${out}" includeantruntime="false">
+      <classpath>
+        <fileset dir="lib">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+  </target>
+  <target name="run" depends="compile">
+    <java fork="true" classname="framework.ExecAsync">
+      <classpath>
+	      <path location="${out}"/>
+	      <path location="lib/jdom.jar"/>
+      </classpath>
+    </java>
+  </target>
+  <target name="runSync" depends="compile">
+    <java fork="true" classname="framework.ExecSync">
+      <classpath>
+	      <path location="${out}"/>
+	      <path location="lib/jdom.jar"/>
+      </classpath>
+    </java>
+  </target>
+  <target name="runReplay" depends="compile">
+    <java fork="true" classname="framework.ExecReplay">
+      <classpath>
+	      <path location="${out}"/>
+	      <path location="lib/jdom.jar"/>
+      </classpath>
+    </java>
+  </target>
+  <target name="runFromData" depends="compile">
+    <java fork="true" classname="framework.ExecFromData">
+      <classpath>
+	      <path location="${out}"/>
+	      <path location="lib/jdom.jar"/>
+      </classpath>
+    </java>
+  </target>
+  <target name="clean">
+    <delete dir="${out}"/>
+  </target>
+</project>
