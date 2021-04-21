@@ -6,6 +6,7 @@ import framework.core.Game;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class AutoSubgoalController extends Controller
@@ -28,19 +29,26 @@ public class AutoSubgoalController extends Controller
 
     private AutoSubgoalMCTS algorithm;
 
+    ArrayList<Game> states;
+    ArrayList<Integer> actions;
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
+        states = new ArrayList<>();
+        actions = new ArrayList<>();
+
         algorithm = new AutoSubgoalMCTS(game, new PositionBehaviourFunction(), 4, 300);
     }
 
-    MCTSNode<AutoSubgoalMCTS.SubgoalData> lastSelectedNode;
-    int actionIndex;
     Random rand = new Random();
     int execCounter = 0;
+
+
 
     @Override
     public int getAction(Game game, long dueTimeMs)
     {
+        algorithm.setInitialState(game.getCopy());
+
         long startTime = System.nanoTime();
         long timeBudgetMs = dueTimeMs - System.currentTimeMillis();
         int counter = 0;
@@ -52,31 +60,7 @@ public class AutoSubgoalController extends Controller
         }
 
         System.out.println("Steps: " + counter);
-        if(lastSelectedNode == null || actionIndex == lastSelectedNode.data.macroAction.size())
-        {
-            lastSelectedNode = algorithm.getBestChild();
-            actionIndex = 0;
-            execCounter = 0;
-
-            if(lastSelectedNode == null)
-            {
-                System.out.println("Error");
-                algorithm = new AutoSubgoalMCTS(game, new PositionBehaviourFunction(), 4, 300);
-                return 0;
-            }
-
-            // The game is deterministic, so we can update immediatly
-            algorithm.advanceTree(lastSelectedNode);
-        }
-
-        int nextAction = lastSelectedNode.data.macroAction.get(actionIndex);
-        execCounter++;
-        if(execCounter == 10)
-        {
-            execCounter = 0;
-            actionIndex++;
-        }
-        return nextAction;
+        return algorithm.getNextAction();
     }
 
     @Override
@@ -89,7 +73,7 @@ public class AutoSubgoalController extends Controller
     private void drawSubgoals(Graphics2D graphics, MCTSNode<AutoSubgoalMCTS.SubgoalData> node)
     {
         int r = 4;
-        //graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
+        graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
         for(MCTSNode<AutoSubgoalMCTS.SubgoalData> child : node.children)
         {
             graphics.drawLine((int)node.data.latentState[0], (int)node.data.latentState[1], (int)child.data.latentState[0], (int)child.data.latentState[1]);
