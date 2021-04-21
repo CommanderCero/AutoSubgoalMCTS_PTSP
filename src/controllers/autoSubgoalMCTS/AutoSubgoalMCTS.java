@@ -8,9 +8,22 @@ import java.util.Collections;
 
 public class AutoSubgoalMCTS
 {
+    double latentDist(double[] l1, double[] l2)
+    {
+        double sumSquared = 0;
+        for(int i = 0; i < l1.length; i++)
+        {
+            double delta = l1[i] - l2[i];
+            sumSquared += delta * delta;
+        }
+        return Math.sqrt(sumSquared);
+    }
+
     public class MacroData
     {
         public int action;
+        double reward;
+        double[] latentState;
     };
 
     public class SubgoalData
@@ -20,44 +33,45 @@ public class AutoSubgoalMCTS
             macroAction = new ArrayList<>();
         }
 
-        Game state;
-        int discardedSubgoalCount = 0;
+        double[] latentState;
         ArrayList<Integer> macroAction;
         MCTSNode<MacroData> macroRoot;
     };
 
     private Game initialState;
     private MCTSNode<SubgoalData> root;
-    private IDistanceMetric distanceMetric;
+    private IBehaviourFunction distanceMetric;
     private int k;
-    private double radius;
-    private ArrayList<Game> discoveredSubgoals;
+    private int n;
+    private double[] latentCache;
+    private ArrayList<MCTSNode<SubgoalData>> discoveredSubgoals;
 
-    private int distanceSampleCount;
-    private double meanDistance;
     private RewardAccumulator rewardAccumulator;
     private RewardAccumulator macroAccumulator;
 
     public double explorationRate = Math.sqrt(2);
     public int maxSimulationSteps = 100;
 
-    public AutoSubgoalMCTS(Game initialState, IDistanceMetric distanceMetric, int k, double radius)
+    public AutoSubgoalMCTS(Game initialState, IBehaviourFunction distanceMetric, int k, int n)
     {
-        this.initialState = initialState;
+        this.initialState = initialState.getCopy();
         this.root = new MCTSNode<>(new SubgoalData());
-        this.root.data.state = initialState.getCopy();
+        this.root.data.macroRoot = new MCTSNode<>(new MacroData());
         this.distanceMetric = distanceMetric;
         this.k = k;
-        this.radius = radius;
+        this.n = n;
+        discoveredSubgoals = new ArrayList<>();
 
         rewardAccumulator = new RewardAccumulator(1);
         macroAccumulator = new RewardAccumulator(0.99);
 
-        discoveredSubgoals = new ArrayList<>();
-        discoveredSubgoals.add(initialState.getCopy());
+        this.latentCache = new double[distanceMetric.getLatentSize()];
+        this.root.data.latentState = new double[distanceMetric.getLatentSize()];
+        distanceMetric.toLatent(initialState, this.root.data.latentState);
+        discoveredSubgoals.add(this.root);
     }
 
-    void step()
+    public void step()
     {
         if (root.fullyExplored)
         {
@@ -67,8 +81,9 @@ public class AutoSubgoalMCTS
         // Selection
         Game state = initialState.getCopy();
         MCTSNode<SubgoalData> currNode = root;
-        while (!currNode.isLeafNode() && currNode.data.macroRoot == null)
+        while (!currNode.isLeafNode())
         {
+            MCTSNode<SubgoalData> lastNode = currNode;
             currNode = currNode.selectUCT(explorationRate);
             for(int action : currNode.data.macroAction)
             {
@@ -90,147 +105,180 @@ public class AutoSubgoalMCTS
         rewardAccumulator.reset();
     }
 
-    void extendNode(MCTSNode<SubgoalData> node, Game state)
+    public void advanceTree(MCTSNode<SubgoalData> selectedChild)
     {
-        if(node.data.macroRoot == null)
+        for(int action : selectedChild.data.macroAction)
         {
-            node.data.macroRoot = new MCTSNode<MacroData>(new MacroData());
+            advanceState(initialState, action);
         }
 
-        // Selection
-        MCTSNode<MacroData> currNode = node.data.macroRoot;
-        while(!currNode.isLeafNode())
-        {
-            currNode = currNode.selectUCT(Math.sqrt(2));
-            advanceStateMacro(node, state, currNode.data.action);
-        }
+        root = selectedChild;
+        updateStatistics(selectedChild, rewardAccumulator.getRewardSum());
+        rewardAccumulator.reset();
 
-        // Did we find a new subgoal?
-        if(distanceMetric.computeDistance(node.data.state, state) / meanDistance >= radius)
+        discoveredSubgoals.clear();
+        resetSubgoals(root);
+    }
+
+    private void resetSubgoals(MCTSNode<SubgoalData> newRoot)
+    {
+        discoveredSubgoals.add(newRoot);
+        for(MCTSNode<SubgoalData> child : newRoot.children)
         {
-            boolean isValid = true;
-            for (MCTSNode<SubgoalData> subgoal : node.children)
+            resetSubgoals(child);
+        }
+    }
+
+    private void updateStatistics(MCTSNode<SubgoalData> currNode, double receivedReward)
+    {
+        //currNode.score -= (currNode.children.size() * receivedReward) / currNode.visitCount;
+        //currNode.score /= rewardAccumulator.rewardDecay;
+
+        for(MCTSNode<SubgoalData> child : currNode.children)
+        {
+            updateStatistics(child, receivedReward);
+        }
+    }
+
+    private void extendNode(MCTSNode<SubgoalData> node, Game state)
+    {
+        if(node.visitCount > n)
+        {
+            selectSubgoals(node);
+            node.data.macroRoot = null;
+        }
+        else
+        {
+            // Selection
+            MCTSNode<MacroData> currNode = node.data.macroRoot;
+            while(currNode.children.size() == Controller.NUM_ACTIONS)
             {
-                if (subgoal == node)
-                    continue;
-
-                if (distanceMetric.computeDistance(subgoal.data.state, state) / meanDistance < radius)
-                {
-                    isValid = false;
-                    break;
-                }
+                currNode = currNode.selectUCT(Math.sqrt(2));
+                advanceStateMacro(node, state, currNode.data.action);
             }
 
-            if (isValid)
+            // Expansion
+            int nextAction = currNode.children.size();
+            advanceStateMacro(node, state, nextAction);
+
+            MacroData macroData = new MacroData();
+            macroData.action = nextAction;
+            macroData.latentState = new double[distanceMetric.getLatentSize()];
+            distanceMetric.toLatent(state, macroData.latentState);
+            currNode = currNode.addChild(macroData);
+
+            // Backpropagation
+            currNode.backpropagate(macroAccumulator.getRewardSum(), backpropNode ->
+            {
+                backpropNode.data.reward += (rewardAccumulator.getRewardSum() - backpropNode.data.reward) / backpropNode.visitCount;
+            });
+            macroAccumulator.reset();
+        }
+    }
+
+    private void selectSubgoals(MCTSNode<SubgoalData> node)
+    {
+        ArrayList<MCTSNode<MacroData>> subgoalCandidates = new ArrayList<>();
+        selectSubgoalCandidates(node.data.macroRoot, 0, subgoalCandidates);
+
+        double percentage = 0.02;
+        int subgoalCount = (int)Math.ceil(percentage * subgoalCandidates.size());
+        assert(subgoalCount > 0);
+        while(node.children.size() < subgoalCount)
+        {
+            // Find best candidate
+            MCTSNode<MacroData> bestCandidate = null;
+            double bestScore = Double.NEGATIVE_INFINITY;
+            for(MCTSNode<MacroData> candidate : subgoalCandidates)
             {
                 // Compute n closest subgoals
                 int n = discoveredSubgoals.size() > 3 ? 3 : discoveredSubgoals.size();
-                Collections.sort(discoveredSubgoals, (Game v1, Game v2) ->
+                Collections.sort(discoveredSubgoals, (MCTSNode<SubgoalData> v1, MCTSNode<SubgoalData> v2) ->
                 {
-                    double v2Dist = distanceMetric.computeDistance(v2, state);
-                    double v1Dist = distanceMetric.computeDistance(v1, state);
+                    double v2Dist = latentDist(v2.data.latentState, candidate.data.latentState);
+                    double v1Dist = latentDist(v1.data.latentState, candidate.data.latentState);
                     return v1Dist > v2Dist ? 1 : v1Dist < v2Dist ? -1 : 0;
                 });
 
-                // Check if the subgoal is sufficiently far from the other n-subgoals
-                double distSum = 0;
-                for(int i =0; i < n; i++)
+                double score = 0;
+                for(int i = 0; i < n; i++)
                 {
-                    distSum += distanceMetric.computeDistance(discoveredSubgoals.get(i), state) / meanDistance;
+                    score += latentDist(candidate.data.latentState, discoveredSubgoals.get(i).data.latentState);
                 }
-
-                isValid = distSum >= radius * n;
-            }
-
-            // Add new subgoal
-            if (isValid)
-            {
-                SubgoalData newSubgoal = new SubgoalData();
-                newSubgoal.state = state.getCopy();
-                MCTSNode<MacroData> tmpNode = currNode;
-                while (tmpNode.parent != null)
+                if(score > bestScore)
                 {
-                    newSubgoal.macroAction.add(tmpNode.data.action);
-                    tmpNode = tmpNode.parent;
-                }
-                Collections.reverse(newSubgoal.macroAction);
-                node.addChild(newSubgoal);
-                discoveredSubgoals.add(state);
-            }
-            else
-            {
-                ++node.data.discardedSubgoalCount;
-                if(node.data.discardedSubgoalCount > 20)
-                {
-                    node.data.macroRoot = null;
-                    if(node.children.isEmpty())
-                        node.setFullyExplored();
-                    return;
+                    bestCandidate = candidate;
+                    bestScore = score;
                 }
             }
 
-            currNode.setFullyExplored();
-        }
-        else if (!state.isEnded())
-        {
-            // Expansion
-            for(int action = 0; action < Controller.NUM_ACTIONS; action++)
+            // Generate subgoal data
+            SubgoalData data = new SubgoalData();
+            data.macroRoot = new MCTSNode<>(new MacroData());
+            data.latentState = bestCandidate.data.latentState;
+            // Collect macro action
+            data.macroAction = new ArrayList<>();
+            MCTSNode<MacroData> tmpNode = bestCandidate;
+            while (tmpNode.parent != null)
             {
-                MacroData macroData = new MacroData();
-                macroData.action = action;
-                currNode.addChild(macroData);
+                data.macroAction.add(tmpNode.data.action);
+                tmpNode = tmpNode.parent;
             }
-
-            currNode = currNode.children.get(0);
-            advanceStateMacro(node, state, currNode.data.action);
+            Collections.reverse(data.macroAction);
+            // Add subgoal
+            discoveredSubgoals.add(node.addChild(data));
         }
 
-        // Backpropagation
-        currNode.backpropagate(macroAccumulator.getRewardSum());
-        macroAccumulator.reset();
+        return;
     }
 
-    void advanceState(Game state, int action)
+    private void selectSubgoalCandidates(MCTSNode<MacroData> node, int count, ArrayList<MCTSNode<MacroData>> bucket)
     {
+        if(count == k)
+        {
+            if(node.visitCount > 0)
+                bucket.add(node);
+            return;
+        }
+
+        count++;
+        for(MCTSNode<MacroData> child : node.children)
+        {
+            selectSubgoalCandidates(child, count, bucket);
+        }
+    }
+
+    private void advanceState(Game state, int action)
+    {
+        int waypointsBefore = state.getWaypointsVisited();
         state.tick(action);
-        rewardAccumulator.addReward(-1);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        state.tick(action);
+        int waypointsAfter = state.getWaypointsVisited();
+        rewardAccumulator.addReward(waypointsBefore != waypointsAfter ? (waypointsAfter - waypointsBefore) * 100 : -1);
+
     }
 
-    void advanceStateMacro(MCTSNode<SubgoalData> subgoalNode, Game state, int action)
+    private void advanceStateMacro(MCTSNode<SubgoalData> subgoalNode, Game state, int action)
     {
-        double distanceBefore = distanceMetric.computeDistance(subgoalNode.data.state, state);
+        distanceMetric.toLatent(state, latentCache);
+        double distanceBefore = latentDist(subgoalNode.data.latentState, latentCache);
         advanceState(state, action);
-        double distanceAfter = distanceMetric.computeDistance(subgoalNode.data.state, state);
+        distanceMetric.toLatent(state, latentCache);
+        double distanceAfter = latentDist(subgoalNode.data.latentState, latentCache);
         macroAccumulator.addReward(distanceAfter - distanceBefore);
-
-        distanceSampleCount += 1;
-        meanDistance += (Math.abs(distanceAfter - distanceBefore) - meanDistance) / distanceSampleCount;
     }
 
-    void replaceRoot(MCTSNode<SubgoalData> selectedChild, Game newInitialState)
+    public MCTSNode<SubgoalData> getBestChild()
     {
-        // Reset subgoals
-        discoveredSubgoals.clear();
-
-        for(int i = 0; i < root.children.size(); i++)
-        {
-            if(root.children.get(i) == selectedChild)
-            {
-                root = root.detachChild(i);
-                i--;
-            }
-            else
-            {
-                addSubgoals(root.children.get(i));
-            }
-        }
-
-        initialState = newInitialState.getCopy();
-    }
-
-    MCTSNode<SubgoalData> getBestChild()
-    {
-        double maxScore = Double.MIN_VALUE;
+        double maxScore = Double.NEGATIVE_INFINITY;
         MCTSNode<SubgoalData> bestChild = null;
         for(MCTSNode<SubgoalData> child : root.children)
         {
@@ -244,19 +292,8 @@ public class AutoSubgoalMCTS
         return bestChild;
     }
 
-    MCTSNode<SubgoalData> getRoot()
+    public MCTSNode<SubgoalData> getRoot()
     {
         return root;
-    }
-
-    private void addSubgoals(MCTSNode<SubgoalData> node)
-    {
-        discoveredSubgoals.add(node.data.state);
-        node.fullyExplored = false;
-        node.data.discardedSubgoalCount = 0;
-        for(MCTSNode<SubgoalData> child : node.children)
-        {
-            addSubgoals(child);
-        }
     }
 }

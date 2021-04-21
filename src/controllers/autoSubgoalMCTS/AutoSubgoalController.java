@@ -3,16 +3,26 @@ package controllers.autoSubgoalMCTS;
 import framework.core.Controller;
 import framework.core.Game;
 
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.util.Random;
 
 public class AutoSubgoalController extends Controller
 {
-    public class PositionDistanceMetric implements IDistanceMetric
+    public class PositionBehaviourFunction implements IBehaviourFunction
     {
         @Override
-        public double computeDistance(Game state1, Game state2)
+        public void toLatent(Game state, double[] bucket)
         {
-            return state1.getShip().s.dist(state2.getShip().s);
+            bucket[0] = state.getShip().s.x;
+            bucket[1] = state.getShip().s.y;
+        }
+
+        @Override
+        public int getLatentSize()
+        {
+            return 2;
         }
     }
 
@@ -20,46 +30,70 @@ public class AutoSubgoalController extends Controller
 
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
-        algorithm = new AutoSubgoalMCTS(game, new PositionDistanceMetric(), 4, 4);
+        algorithm = new AutoSubgoalMCTS(game, new PositionBehaviourFunction(), 4, 300);
     }
 
-    MCTSNode<AutoSubgoalMCTS.SubgoalData> currentChild;
-    int index;
+    MCTSNode<AutoSubgoalMCTS.SubgoalData> lastSelectedNode;
+    int actionIndex;
     Random rand = new Random();
+    int execCounter = 0;
 
     @Override
     public int getAction(Game game, long dueTimeMs)
     {
-        algorithm = new AutoSubgoalMCTS(game, new PositionDistanceMetric(), 4, 4);
         long startTime = System.nanoTime();
         long timeBudgetMs = dueTimeMs - System.currentTimeMillis();
-        if(currentChild != null && index >= currentChild.data.macroAction.size())
-        {
-            index = 0;
-            algorithm.replaceRoot(currentChild, game);
-            currentChild = null;
-        }
-
         int counter = 0;
-        if(currentChild == null)
+        // Run until the timeBudget is nearly used up, with a little bit of remaining time to collect the action
+        while((System.nanoTime() - startTime) / 1000000 < timeBudgetMs - 5)
         {
-            // Run until the timeBudget is nearly used up, with a little bit of remaining time to collect the action
-            while((System.nanoTime() - startTime) / 1000000 < timeBudgetMs - 2)
-            {
-                algorithm.step();
-                counter++;
-            }
-            currentChild = algorithm.getBestChild();
+            algorithm.step();
+            counter++;
         }
 
-        if(currentChild == null)
+        System.out.println("Steps: " + counter);
+        if(lastSelectedNode == null || actionIndex == lastSelectedNode.data.macroAction.size())
         {
-            System.out.println(counter);
-            System.out.println("Error");
-            return 0;
+            lastSelectedNode = algorithm.getBestChild();
+            actionIndex = 0;
+            execCounter = 0;
+
+            if(lastSelectedNode == null)
+            {
+                System.out.println("Error");
+                algorithm = new AutoSubgoalMCTS(game, new PositionBehaviourFunction(), 4, 300);
+                return 0;
+            }
+
+            // The game is deterministic, so we can update immediatly
+            algorithm.advanceTree(lastSelectedNode);
         }
-        int nextAction = currentChild.data.macroAction.get(index);
-        index++;
+
+        int nextAction = lastSelectedNode.data.macroAction.get(actionIndex);
+        execCounter++;
+        if(execCounter == 10)
+        {
+            execCounter = 0;
+            actionIndex++;
+        }
         return nextAction;
+    }
+
+    @Override
+    public void paint(Graphics2D graphics)
+    {
+        graphics.setColor(Color.yellow);
+        drawSubgoals(graphics, algorithm.getRoot());
+    }
+
+    private void drawSubgoals(Graphics2D graphics, MCTSNode<AutoSubgoalMCTS.SubgoalData> node)
+    {
+        int r = 4;
+        //graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
+        for(MCTSNode<AutoSubgoalMCTS.SubgoalData> child : node.children)
+        {
+            graphics.drawLine((int)node.data.latentState[0], (int)node.data.latentState[1], (int)child.data.latentState[0], (int)child.data.latentState[1]);
+            drawSubgoals(graphics, child);
+        }
     }
 }

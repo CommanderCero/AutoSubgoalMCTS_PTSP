@@ -4,14 +4,19 @@ import java.util.ArrayList;
 
 public class MCTSNode<Data>
 {
+    public interface INodeVisitor<Data>
+    {
+        void visit(MCTSNode<Data> node);
+    }
+
     MCTSNode<Data> parent;
     ArrayList<MCTSNode<Data>> children;
     Data data;
 
     boolean fullyExplored;
     double score;
-    double lowerBound = Double.MAX_VALUE;
-    double upperBound = Double.MIN_VALUE;
+    double lowerBound = Double.POSITIVE_INFINITY;
+    double upperBound = Double.NEGATIVE_INFINITY;
     int visitCount;
 
     public MCTSNode(Data data)
@@ -22,7 +27,7 @@ public class MCTSNode<Data>
 
     public MCTSNode<Data> selectUCT(double explorationRate)
     {
-        double highestUCT = Double.MIN_VALUE;
+        double highestUCT = Double.NEGATIVE_INFINITY;
         MCTSNode<Data> bestChild = null;
         for (MCTSNode<Data> child : children)
         {
@@ -44,11 +49,12 @@ public class MCTSNode<Data>
         return bestChild;
     }
 
-    public void addChild(Data childData)
+    public MCTSNode<Data> addChild(Data childData)
     {
         MCTSNode<Data> newChild = new MCTSNode<Data>(childData);
         newChild.parent = this;
         children.add(newChild);
+        return newChild;
     }
 
     public MCTSNode<Data> detachChild(int index)
@@ -67,6 +73,20 @@ public class MCTSNode<Data>
             currNode.score += (score - currNode.score) / currNode.visitCount;
             currNode.lowerBound = Math.min(score, currNode.lowerBound);
             currNode.upperBound = Math.max(score, currNode.upperBound);
+            currNode = currNode.parent;
+        }
+    }
+
+    public void backpropagate(double score, INodeVisitor<Data> visitor)
+    {
+        MCTSNode<Data> currNode = this;
+        while (currNode != null)
+        {
+            ++currNode.visitCount;
+            currNode.score += (score - currNode.score) / currNode.visitCount;
+            currNode.lowerBound = Math.min(score, currNode.lowerBound);
+            currNode.upperBound = Math.max(score, currNode.upperBound);
+            visitor.visit(currNode);
             currNode = currNode.parent;
         }
     }
