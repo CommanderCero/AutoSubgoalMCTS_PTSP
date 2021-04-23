@@ -149,8 +149,7 @@ public class ExecSync extends Exec
             int action = m_controller.getAction(m_game.getCopy(), due);
             if(System.currentTimeMillis() > due)
             {
-                action = Controller.ACTION_NO_FRONT;
-                System.out.println("Controller overtimed. Applying action NO_FRONT instead");
+                System.out.println("Controller overtimed.");
             }
 
             m_game.tick(action);

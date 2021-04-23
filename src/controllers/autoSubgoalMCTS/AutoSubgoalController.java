@@ -36,13 +36,11 @@ public class AutoSubgoalController extends Controller
         states = new ArrayList<>();
         actions = new ArrayList<>();
 
-        algorithm = new AutoSubgoalMCTS(game, new PositionBehaviourFunction(), 4, 300);
+        algorithm = new AutoSubgoalMCTS(game, new SubgoalSearchMCTS(4, new PositionBehaviourFunction()), 300);
     }
 
     Random rand = new Random();
     int execCounter = 0;
-
-
 
     @Override
     public int getAction(Game game, long dueTimeMs)
@@ -52,7 +50,7 @@ public class AutoSubgoalController extends Controller
         long startTime = System.nanoTime();
         long timeBudgetMs = dueTimeMs - System.currentTimeMillis();
         int counter = 0;
-        // Run until the timeBudget is nearly used up, with a little bit of remaining time to collect the action
+        // Run until the timeBudget is used up, with a little bit of remaining time to collect the action
         while((System.nanoTime() - startTime) / 1000000 < timeBudgetMs - 5)
         {
             algorithm.step();
@@ -70,13 +68,20 @@ public class AutoSubgoalController extends Controller
         drawSubgoals(graphics, algorithm.getRoot());
     }
 
-    private void drawSubgoals(Graphics2D graphics, MCTSNode<AutoSubgoalMCTS.SubgoalData> node)
+    private void drawSubgoals(Graphics2D graphics, MCTSNode<SubgoalData> node)
     {
         int r = 4;
-        graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
-        for(MCTSNode<AutoSubgoalMCTS.SubgoalData> child : node.children)
+        if(node.data.latentState != null)
         {
-            graphics.drawLine((int)node.data.latentState[0], (int)node.data.latentState[1], (int)child.data.latentState[0], (int)child.data.latentState[1]);
+            graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
+        }
+
+        for(int i = 0; i < node.children.size(); i++)
+        {
+            MCTSNode<SubgoalData> child = node.children.get(i);
+            if(node.data.latentState != null) {
+                graphics.drawLine((int) node.data.latentState[0], (int) node.data.latentState[1], (int) child.data.latentState[0], (int) child.data.latentState[1]);
+            }
             drawSubgoals(graphics, child);
         }
     }
