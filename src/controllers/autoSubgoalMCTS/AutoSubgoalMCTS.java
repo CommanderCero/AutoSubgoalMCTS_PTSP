@@ -124,7 +124,7 @@ public class AutoSubgoalMCTS
         int waypointsBefore = state.getWaypointsVisited();
         action.apply(state);
         int waypointsAfter = state.getWaypointsVisited();
-        rewardAccumulator.addReward(waypointsBefore != waypointsAfter ? (waypointsAfter - waypointsBefore) * 100 : -1);
+        rewardAccumulator.addReward(waypointsBefore != waypointsAfter ? (waypointsAfter - waypointsBefore) * 10 : -1);
     }
 
     public MCTSNode<SubgoalData> getBestChild()

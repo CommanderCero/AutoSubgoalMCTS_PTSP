@@ -271,8 +271,11 @@ public class Vector2d
      */
     public void normalise() {
         double mag = mag();
-        x /= mag;
-        y /= mag;
+        if(Math.abs(mag) >= 0.0001)
+        {
+            x /= mag;
+            y /= mag;
+        }
     }
 
     /**

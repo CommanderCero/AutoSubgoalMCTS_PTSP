@@ -24,4 +24,12 @@ public class BaseAction
             state.tick(lowLevelAction);
         }
     }
+
+    public void apply(RewardGame state)
+    {
+        for(int i = 0; i < repetitions; i++)
+        {
+            state.tick(lowLevelAction);
+        }
+    }
 }

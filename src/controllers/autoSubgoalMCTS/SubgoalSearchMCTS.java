@@ -27,6 +27,8 @@ public class SubgoalSearchMCTS
 
     public void step(Game state)
     {
+        behaviourFunction.toLatent(state, rootCache);
+
         // Selection
         MCTSNode<SearchData> currNode = root;
         while(currNode.children.size() == Controller.NUM_ACTIONS)
@@ -65,19 +67,10 @@ public class SubgoalSearchMCTS
             double bestScore = Double.NEGATIVE_INFINITY;
             for(MCTSNode<SearchData> candidate : subgoalCandidates)
             {
-                // Compute n closest subgoals
-                int n = node.children.size() > 3 ? 3 : node.children.size() ;
-                Collections.sort(node.children, (MCTSNode<SubgoalData> v1, MCTSNode<SubgoalData> v2) ->
-                {
-                    double v2Dist = latentDist(v2.data.latentState, candidate.data.latentState);
-                    double v1Dist = latentDist(v1.data.latentState, candidate.data.latentState);
-                    return v1Dist > v2Dist ? 1 : v1Dist < v2Dist ? -1 : 0;
-                });
-
                 double score = 0;
-                for(int i = 0; i < n; i++)
+                for(int i = 0; i < node.children.size(); i++)
                 {
-                    score += latentDist(candidate.data.latentState, subgoalCandidates.get(i).data.latentState);
+                    score += latentDist(candidate.data.latentState, node.children.get(i).data.latentState);
                 }
                 if(score > bestScore)
                 {
@@ -120,8 +113,6 @@ public class SubgoalSearchMCTS
 
     private void advanceState(Game state, BaseAction action)
     {
-        behaviourFunction.toLatent(state, rootCache);
-
         behaviourFunction.toLatent(state, latentCache);
         double distanceBefore = latentDist(rootCache, latentCache);
         // ToDo return reward
@@ -152,7 +143,7 @@ public class SubgoalSearchMCTS
     private MCTSNode<SearchData> root;
     private int trajectoryLength;
     private RewardAccumulator macroAccumulator;
-    private IBehaviourFunction behaviourFunction;
+    public IBehaviourFunction behaviourFunction;
     private double[] latentCache;
     private double[] rootCache;
 }

@@ -2,12 +2,14 @@ package controllers.autoSubgoalMCTS;
 
 import framework.core.Controller;
 import framework.core.Game;
+import framework.utils.Vector2d;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class AutoSubgoalController extends Controller
 {
@@ -18,6 +20,10 @@ public class AutoSubgoalController extends Controller
         {
             bucket[0] = state.getShip().s.x;
             bucket[1] = state.getShip().s.y;
+            // v = new Vector2d(state.getShip().v);
+            //v.normalise();
+            //bucket[2] = v.x;
+            //bucket[3] = v.y;
         }
 
         @Override
@@ -39,11 +45,8 @@ public class AutoSubgoalController extends Controller
         algorithm = new AutoSubgoalMCTS(game, new SubgoalSearchMCTS(4, new PositionBehaviourFunction()), 300);
     }
 
-    Random rand = new Random();
-    int execCounter = 0;
-
     @Override
-    public int getAction(Game game, long dueTimeMs)
+    public synchronized int getAction(Game game, long dueTimeMs)
     {
         algorithm.setInitialState(game.getCopy());
 
@@ -57,12 +60,13 @@ public class AutoSubgoalController extends Controller
             counter++;
         }
 
-        System.out.println("Steps: " + counter);
-        return algorithm.getNextAction();
+        int action = algorithm.getNextAction();
+        System.out.println("Action: " + action + "\tSteps: " + counter);
+        return action;
     }
 
     @Override
-    public void paint(Graphics2D graphics)
+    public synchronized void paint(Graphics2D graphics)
     {
         graphics.setColor(Color.yellow);
         drawSubgoals(graphics, algorithm.getRoot());
@@ -70,7 +74,7 @@ public class AutoSubgoalController extends Controller
 
     private void drawSubgoals(Graphics2D graphics, MCTSNode<SubgoalData> node)
     {
-        int r = 4;
+        int r = 2;
         if(node.data.latentState != null)
         {
             graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
