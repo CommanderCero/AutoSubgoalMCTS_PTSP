@@ -1,5 +1,6 @@
 package controllers.autoSubgoalMCTS;
 
+import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.mcts.MacroAction;
 import framework.core.Controller;
 import framework.core.Game;
@@ -25,26 +26,26 @@ public class SubgoalSearchMCTS
         return newSearch;
     }
 
-    public void step(Game state)
+    public void step(RewardGame game)
     {
-        behaviourFunction.toLatent(state, rootCache);
+        behaviourFunction.toLatent(game.getState(), rootCache);
 
         // Selection
         MCTSNode<SearchData> currNode = root;
         while(currNode.children.size() == Controller.NUM_ACTIONS)
         {
             currNode = currNode.selectUCT(Math.sqrt(2));
-            advanceState(state, currNode.data.action);
+            advanceGame(game, currNode.data.action);
         }
 
         // Expansion
         BaseAction nextAction = new BaseAction(currNode.children.size());
-        advanceState(state, nextAction);
+        advanceGame(game, nextAction);
 
         SearchData macroData = new SearchData();
         macroData.action = nextAction;
         macroData.latentState = new double[behaviourFunction.getLatentSize()];
-        behaviourFunction.toLatent(state, macroData.latentState);
+        behaviourFunction.toLatent(game.getState(), macroData.latentState);
         currNode = currNode.addChild(macroData);
 
         // Backpropagation
@@ -111,13 +112,13 @@ public class SubgoalSearchMCTS
         }
     }
 
-    private void advanceState(Game state, BaseAction action)
+    private void advanceGame(RewardGame game, BaseAction action)
     {
-        behaviourFunction.toLatent(state, latentCache);
+        behaviourFunction.toLatent(game.getState(), latentCache);
         double distanceBefore = latentDist(rootCache, latentCache);
         // ToDo return reward
-        action.apply(state);
-        behaviourFunction.toLatent(state, latentCache);
+        action.apply(game);
+        behaviourFunction.toLatent(game.getState(), latentCache);
         double distanceAfter = latentDist(rootCache, latentCache);
         macroAccumulator.addReward(distanceAfter - distanceBefore);
     }

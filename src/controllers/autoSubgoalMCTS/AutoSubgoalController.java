@@ -1,5 +1,7 @@
 package controllers.autoSubgoalMCTS;
 
+import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
+import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import framework.core.Controller;
 import framework.core.Game;
 import framework.utils.Vector2d;
@@ -42,7 +44,8 @@ public class AutoSubgoalController extends Controller
         states = new ArrayList<>();
         actions = new ArrayList<>();
 
-        algorithm = new AutoSubgoalMCTS(game, new SubgoalSearchMCTS(4, new PositionBehaviourFunction()), 300);
+        RewardGame rGame = new NaiveRewardGame(game);
+        algorithm = new AutoSubgoalMCTS(rGame, new SubgoalSearchMCTS(4, new PositionBehaviourFunction()), 300);
     }
 
     @Override

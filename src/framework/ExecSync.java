@@ -1,5 +1,7 @@
 package framework;
 
+import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
+import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.keycontroller.KeyController;
 import framework.core.*;
 import framework.utils.JEasyFrame;
@@ -137,7 +139,6 @@ public class ExecSync extends Exec
                 frame.addKeyListener(((KeyController)m_controller).getInput());
             }
         }
-
 
         while(!m_game.isEnded())
         {

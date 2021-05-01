@@ -1,5 +1,6 @@
 package controllers.autoSubgoalMCTS;
 
+import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import framework.core.Controller;
 import framework.core.Game;
 
@@ -8,7 +9,7 @@ import java.util.Collections;
 
 public class AutoSubgoalMCTS
 {
-    private Game initialState;
+    private RewardGame initialGame;
     private MCTSNode<SubgoalData> root;
     private SubgoalSearchMCTS subgoalSearch;
     private int n;
@@ -19,9 +20,9 @@ public class AutoSubgoalMCTS
     public double explorationRate = Math.sqrt(2);
     public int maxSimulationSteps = 100;
 
-    public AutoSubgoalMCTS(Game initialState, SubgoalSearchMCTS subgoalSearch, int n)
+    public AutoSubgoalMCTS(RewardGame initialGame, SubgoalSearchMCTS subgoalSearch, int n)
     {
-        this.initialState = initialState.getCopy();
+        this.initialGame = initialGame.getCopy();
         this.root = new MCTSNode<>(new SubgoalData());
         this.root.data.subgoalSearch = subgoalSearch;
         this.n = n;
@@ -32,29 +33,29 @@ public class AutoSubgoalMCTS
 
     public void setInitialState(Game newInitialState)
     {
-        initialState = newInitialState;
+        initialGame.setState(newInitialState);
     }
 
     public void step()
     {
         // Selection
-        Game state = initialState.getCopy();
+        RewardGame game = initialGame.getCopy();
         MCTSNode<SubgoalData> currNode = root;
         while (!currNode.isLeafNode())
         {
             currNode = currNode.selectUCT(explorationRate);
             for(BaseAction action : currNode.data.macroAction)
             {
-                advanceState(state, action);
+                rewardAccumulator.addReward(action.apply(game));
             }
         }
 
-        if (!state.isEnded())
+        if (!game.isEnded())
         {
             // Expansion
             if(currNode.visitCount < n)
             {
-                currNode.data.subgoalSearch.step(state);
+                currNode.data.subgoalSearch.step(game);
             }
             else
             {
@@ -117,14 +118,6 @@ public class AutoSubgoalMCTS
         {
             updateStatistics(child, receivedReward);
         }
-    }
-
-    private void advanceState(Game state, BaseAction action)
-    {
-        int waypointsBefore = state.getWaypointsVisited();
-        action.apply(state);
-        int waypointsAfter = state.getWaypointsVisited();
-        rewardAccumulator.addReward(waypointsBefore != waypointsAfter ? (waypointsAfter - waypointsBefore) * 10 : -1);
     }
 
     public MCTSNode<SubgoalData> getBestChild()
