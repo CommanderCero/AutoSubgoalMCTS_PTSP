@@ -73,7 +73,7 @@ public class MCTSController extends Controller
             }
         }
 
-        System.out.println(" ----> EXECUTING: " + m_mcts.m_rootNode.m_visits);
+        //System.out.println(" ----> EXECUTING: " + m_mcts.m_rootNode.m_visits);
         return nextAction.buildAction();
     }
 

@@ -64,7 +64,7 @@ public class AutoSubgoalController extends Controller
         }
 
         int action = algorithm.getNextAction();
-        System.out.println("Action: " + action + "\tSteps: " + counter);
+        //System.out.println("Action: " + action + "\tSteps: " + counter);
         return action;
     }
 
