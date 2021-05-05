@@ -56,7 +56,14 @@ public class SubgoalSearchMCTS
     public void addSubgoals(MCTSNode<SubgoalData> node)
     {
         ArrayList<MCTSNode<SearchData>> subgoalCandidates = new ArrayList<>();
-        selectSubgoalCandidates(root, trajectoryLength, subgoalCandidates);
+        int tmpTrajectoryLength = trajectoryLength;
+        // Keep reducing the trajectory length if we didnt find any suitable candidates
+        while(subgoalCandidates.size() == 0)
+        {
+            assert(tmpTrajectoryLength > 0);
+            selectSubgoalCandidates(root, tmpTrajectoryLength, subgoalCandidates);
+            tmpTrajectoryLength--;
+        }
 
         double percentage = 0.02;
         int subgoalCount = (int)Math.ceil(percentage * subgoalCandidates.size());

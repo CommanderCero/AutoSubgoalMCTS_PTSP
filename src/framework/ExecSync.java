@@ -224,12 +224,12 @@ public class ExecSync extends Exec
         //runExperiments(numTrials, "Random");
         //m_controllerName = "controllers.mcts.MCTSController";
         //runExperiments(numTrials, "MCTS");
-        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-        //runExperiments(numTrials, "AutoSubgoalMCTS");
+        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        runExperiments(numTrials, "AutoSubgoalMCTS");
 
         /////// 2. Runs once in a map, supplying frame rate:
-        int delay = 5;  //0 or 2: quickest, PTSPConstants.DELAY: human play speed, PTSPConstants.ACTION_TIME_MS: max. controller delay
-        runGame(m_visibility,delay);
+        // int delay = 5;  //0 or 2: quickest, PTSPConstants.DELAY: human play speed, PTSPConstants.ACTION_TIME_MS: max. controller delay
+        // runGame(m_visibility,delay);
 
         /////// 3. Runs once in a map, for the player
         /////// Use also this mode to play with the key controller.

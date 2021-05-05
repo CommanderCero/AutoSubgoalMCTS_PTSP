@@ -53,9 +53,10 @@ public class AutoSubgoalMCTS
         if (!game.isEnded())
         {
             // Expansion
-            if(currNode.visitCount < n)
+            if(currNode.data.stepCount < n)
             {
                 currNode.data.subgoalSearch.step(game);
+                currNode.data.stepCount++;
             }
             else
             {
@@ -94,15 +95,11 @@ public class AutoSubgoalMCTS
         nextAction.repetitions--;
         if(nextAction.repetitions == 0)
         {
+            root.children.get(0).data.macroAction.remove(0);
             // Only one action left, aka this is our new root
-            if(root.children.get(0).data.macroAction.size() == 1)
+            if(root.children.get(0).data.macroAction.size() == 0)
             {
                 root = root.children.get(0);
-                root.data.macroAction.clear(); // Clear to avoid confusion
-            }
-            else
-            {
-                root.children.get(0).data.macroAction.remove(0);
             }
         }
 

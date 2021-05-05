@@ -11,5 +11,6 @@ public class SubgoalData
 
     double[] latentState;
     ArrayList<BaseAction> macroAction;
+    int stepCount = 0;
     SubgoalSearchMCTS subgoalSearch;
 };
