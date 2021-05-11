@@ -41,6 +41,7 @@ if __name__ == "__main__":
     experiments = {
         "MCTS": {"filePath": "./MCTS_2021_05_03_12_43.csv", "color": "blue"},
         "S-MCTS": {"filePath": "./AutoSubgoalMCTS_2021_05_04_13_20.csv", "color": "red"},
+        "Naive MCTS": {"filePath": "./NaiveMCTS_2021_05_07_11_15.csv", "color": "green"},
     }
     for key in experiments:
         experiments[key]["data"] = pd.read_csv(experiments[key]["filePath"], delimiter="\t")
@@ -55,9 +56,9 @@ if __name__ == "__main__":
         plotStatistics(df, "Steps", experimentName, color)
     plt.xlim(0, 1000)
     plt.xlabel("Avg. Steps per Waypoint")
-    plt.legend(loc="lower right")
+    plt.legend(loc="upper right", bbox_to_anchor=(1.15,1.15))
     plt.show()
-    f.savefig("stepsPerWaypoint.pdf", bbox_inches='tight')
+    f.savefig("stepsPerWaypoint.png", bbox_inches='tight')
     
     # Plot waypoints visited
     f = plt.figure()
@@ -67,8 +68,8 @@ if __name__ == "__main__":
         plotStatistics(df, "WaypointsVisited", experimentName, color)
     plt.xlim(-1, 11)
     plt.xlabel("Waypoints visited")
-    plt.legend(loc="lower left")
+    plt.legend(loc="upper right", bbox_to_anchor=(1.15,1.15))
     plt.show()
-    f.savefig("waypointsVisited.pdf", bbox_inches='tight')
+    f.savefig("waypointsVisited.png", bbox_inches='tight')
     
     

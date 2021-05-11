@@ -5,7 +5,7 @@ import framework.core.Game;
 
 public class BaseAction
 {
-    static int DEFAULT_REPETITIONS = 10;
+    static int DEFAULT_REPETITIONS = 15;
 
     public int lowLevelAction;
     public int repetitions;
@@ -32,5 +32,10 @@ public class BaseAction
             state.tick(lowLevelAction);
         }
         return state.getRewardSum() - sumBefore;
+    }
+
+    public void apply(RewardGame state, RewardAccumulator accumulator)
+    {
+        accumulator.addReward(apply(state));
     }
 }

@@ -111,6 +111,38 @@ public class MCTSNode<Data>
         }
     }
 
+    public MCTSNode<Data> getChildWithHighestReturn()
+    {
+        double bestScore = Double.NEGATIVE_INFINITY;
+        MCTSNode<Data> bestChild = null;
+        for(MCTSNode<Data> child : children)
+        {
+            if(child.score > bestScore)
+            {
+                bestScore = child.score;
+                bestChild = child;
+            }
+        }
+
+        return bestChild;
+    }
+
+    public MCTSNode<Data> getChildWithHighestVisits()
+    {
+        double bestScore = Double.NEGATIVE_INFINITY;
+        MCTSNode<Data> bestChild = null;
+        for(MCTSNode<Data> child : children)
+        {
+            if(child.visitCount > bestScore)
+            {
+                bestScore = child.visitCount;
+                bestChild = child;
+            }
+        }
+
+        return bestChild;
+    }
+
     public boolean isLeafNode() { return children.isEmpty(); }
     public boolean isRootNode() { return parent == null; }
 }

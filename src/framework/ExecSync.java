@@ -212,7 +212,8 @@ public class ExecSync extends Exec
         //m_controllerName = "controllers.greedy.GreedyController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.simpleGA.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
-        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
+        m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
 
         m_visibility = true; //Set here if the graphics must be displayed or not (for those modes where graphics are allowed).
         m_writeOutput = false; //Indicate if the actions must be saved to a file after the end of the game.
@@ -224,12 +225,14 @@ public class ExecSync extends Exec
         //runExperiments(numTrials, "Random");
         //m_controllerName = "controllers.mcts.MCTSController";
         //runExperiments(numTrials, "MCTS");
-        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-        runExperiments(numTrials, "AutoSubgoalMCTS");
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        //runExperiments(numTrials, "AutoSubgoalMCTS");
+        //m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController";
+        //runExperiments(numTrials, "NaiveMCTS");
 
         /////// 2. Runs once in a map, supplying frame rate:
-        // int delay = 5;  //0 or 2: quickest, PTSPConstants.DELAY: human play speed, PTSPConstants.ACTION_TIME_MS: max. controller delay
-        // runGame(m_visibility,delay);
+        int delay = 5;  //0 or 2: quickest, PTSPConstants.DELAY: human play speed, PTSPConstants.ACTION_TIME_MS: max. controller delay
+        runGame(m_visibility,delay);
 
         /////// 3. Runs once in a map, for the player
         /////// Use also this mode to play with the key controller.
