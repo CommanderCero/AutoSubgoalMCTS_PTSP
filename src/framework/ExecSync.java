@@ -212,8 +212,8 @@ public class ExecSync extends Exec
         //m_controllerName = "controllers.greedy.GreedyController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.simpleGA.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
-        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
-        m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
+        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
+        //m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
 
         m_visibility = true; //Set here if the graphics must be displayed or not (for those modes where graphics are allowed).
         m_writeOutput = false; //Indicate if the actions must be saved to a file after the end of the game.

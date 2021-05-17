@@ -1,6 +1,7 @@
 package controllers.autoSubgoalMCTS;
 
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
+import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import framework.core.Controller;
 import framework.core.Game;
 
@@ -11,7 +12,7 @@ public class AutoSubgoalMCTS
 {
     private RewardGame initialGame;
     private MCTSNode<SubgoalData> root;
-    private SubgoalSearchMCTS subgoalSearch;
+    private ISubgoalSearch subgoalSearch;
     private int n;
 
     private RewardAccumulator rewardAccumulator;
@@ -20,11 +21,12 @@ public class AutoSubgoalMCTS
     public double explorationRate = Math.sqrt(2);
     public int maxSimulationSteps = 100;
 
-    public AutoSubgoalMCTS(RewardGame initialGame, SubgoalSearchMCTS subgoalSearch, int n)
+    public AutoSubgoalMCTS(RewardGame initialGame, ISubgoalSearch subgoalSearch, int n)
     {
         this.initialGame = initialGame.getCopy();
         this.root = new MCTSNode<>(new SubgoalData());
-        this.root.data.subgoalSearch = subgoalSearch;
+        this.root.data.subgoalSearch = subgoalSearch.copy();
+        this.subgoalSearch = subgoalSearch;
         this.n = n;
 
         rewardAccumulator = new RewardAccumulator(0.99);
@@ -41,7 +43,7 @@ public class AutoSubgoalMCTS
         // Selection
         RewardGame game = initialGame.getCopy();
         MCTSNode<SubgoalData> currNode = root;
-        while (!currNode.isLeafNode())
+        while (!game.isEnded() && currNode.data.subgoalSearch == null)
         {
             currNode = currNode.selectUCT(explorationRate);
             for(BaseAction action : currNode.data.macroAction)
@@ -53,17 +55,18 @@ public class AutoSubgoalMCTS
         if (!game.isEnded())
         {
             // Expansion
-            if(currNode.data.stepCount < n)
-            {
-                currNode.data.subgoalSearch.step(game);
-                currNode.data.stepCount++;
-            }
-            else
+            if(currNode.data.subgoalSearch.isDone())
             {
                 currNode.data.subgoalSearch.addSubgoals(currNode);
                 for(MCTSNode<SubgoalData> child : currNode.children)
-                    child.data.subgoalSearch = currNode.data.subgoalSearch.initNewSearch();
+                {
+                    child.data.subgoalSearch = subgoalSearch.copy();
+                }
                 currNode.data.subgoalSearch = null;
+            }
+            else
+            {
+                currNode.data.subgoalSearch.step(game);
             }
 
             // Simulation

@@ -1,16 +1,16 @@
-package controllers.autoSubgoalMCTS;
+package controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch;
 
+import controllers.autoSubgoalMCTS.*;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
-import controllers.mcts.MacroAction;
+import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import framework.core.Controller;
-import framework.core.Game;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class SubgoalSearchMCTS
+public class MCTSNoveltySearch implements ISubgoalSearch
 {
-    public SubgoalSearchMCTS(int trajectoryLength, IBehaviourFunction behaviourFunction)
+    public MCTSNoveltySearch(int trajectoryLength, IBehaviourFunction behaviourFunction)
     {
         this.trajectoryLength = trajectoryLength;
         this.behaviourFunction = behaviourFunction;
@@ -20,12 +20,13 @@ public class SubgoalSearchMCTS
         this.rootCache = new double[behaviourFunction.getLatentSize()];
     }
 
-    public SubgoalSearchMCTS initNewSearch()
+    public ISubgoalSearch copy()
     {
-        SubgoalSearchMCTS newSearch = new SubgoalSearchMCTS(trajectoryLength, behaviourFunction);
+        MCTSNoveltySearch newSearch = new MCTSNoveltySearch(trajectoryLength, behaviourFunction);
         return newSearch;
     }
 
+    @Override
     public void step(RewardGame game)
     {
         behaviourFunction.toLatent(game.getState(), rootCache);
@@ -53,7 +54,14 @@ public class SubgoalSearchMCTS
         macroAccumulator.reset();
     }
 
-    public void addSubgoals(MCTSNode<SubgoalData> node)
+    @Override
+    public boolean isDone()
+    {
+        return root.visitCount >= 400;
+    }
+
+    @Override
+    public void addSubgoals(MCTSNode<SubgoalData> parentNode)
     {
         ArrayList<MCTSNode<SearchData>> subgoalCandidates = new ArrayList<>();
         int tmpTrajectoryLength = trajectoryLength;
@@ -68,7 +76,7 @@ public class SubgoalSearchMCTS
         double percentage = 0.02;
         int subgoalCount = (int)Math.ceil(percentage * subgoalCandidates.size());
         assert(subgoalCount > 0);
-        while(node.children.size() < subgoalCount)
+        while(parentNode.children.size() < subgoalCount)
         {
             // Find best candidate
             MCTSNode<SearchData> bestCandidate = null;
@@ -76,9 +84,9 @@ public class SubgoalSearchMCTS
             for(MCTSNode<SearchData> candidate : subgoalCandidates)
             {
                 double score = 0;
-                for(int i = 0; i < node.children.size(); i++)
+                for(int i = 0; i < parentNode.children.size(); i++)
                 {
-                    score += latentDist(candidate.data.latentState, node.children.get(i).data.latentState);
+                    score += latentDist(candidate.data.latentState, parentNode.children.get(i).data.latentState);
                 }
                 if(score > bestScore)
                 {
@@ -99,7 +107,7 @@ public class SubgoalSearchMCTS
             }
             // We collect the actions from bottom to top, meaning they are in the wrong order
             Collections.reverse(subgoalData.macroAction);
-            node.addChild(subgoalData);
+            parentNode.addChild(subgoalData);
         }
     }
 
@@ -139,13 +147,6 @@ public class SubgoalSearchMCTS
             sumSquared += delta * delta;
         }
         return Math.sqrt(sumSquared);
-    }
-
-    private class SearchData
-    {
-        public BaseAction action;
-        double reward;
-        double[] latentState;
     }
 
     private MCTSNode<SearchData> root;

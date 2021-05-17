@@ -7,26 +7,26 @@ public class RewardAccumulator
 
     public double rewardDecay;
 
-    RewardAccumulator(double rewardDecay)
+    public RewardAccumulator(double rewardDecay)
     {
         rewardSum = 0;
         multiplier = 1;
         this.rewardDecay = rewardDecay;
     }
 
-    void addReward(double reward)
+    public void addReward(double reward)
     {
         rewardSum += multiplier * reward;
         multiplier *= rewardDecay;
     }
 
-    void reset()
+    public void reset()
     {
         rewardSum = 0;
         multiplier = 1;
     }
 
-	double getRewardSum()
+    public double getRewardSum()
     {
         return rewardSum;
     }

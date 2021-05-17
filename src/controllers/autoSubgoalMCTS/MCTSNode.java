@@ -9,15 +9,15 @@ public class MCTSNode<Data>
         void visit(MCTSNode<Data> node);
     }
 
-    MCTSNode<Data> parent;
-    ArrayList<MCTSNode<Data>> children;
-    Data data;
+    public MCTSNode<Data> parent;
+    public ArrayList<MCTSNode<Data>> children;
+    public Data data;
 
-    boolean fullyExplored;
-    double score;
-    double lowerBound = Double.POSITIVE_INFINITY;
-    double upperBound = Double.NEGATIVE_INFINITY;
-    int visitCount;
+    public boolean fullyExplored;
+    public double score;
+    public double lowerBound = Double.POSITIVE_INFINITY;
+    public double upperBound = Double.NEGATIVE_INFINITY;
+    public int visitCount;
 
     public MCTSNode(Data data)
     {
