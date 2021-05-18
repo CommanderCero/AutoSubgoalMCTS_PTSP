@@ -230,6 +230,10 @@ public class Vector2d
         return sqr(x - v.x) + sqr(y - v.y);
     }
 
+    public double sqDist(double x, double y) {
+        return sqr(x - x) + sqr(y - y);
+    }
+
     /**
      * Gets the magnitude of the vector.
      * @return the magnitude of the vector (Math.sqrt(sqr(x) + sqr(y)))
