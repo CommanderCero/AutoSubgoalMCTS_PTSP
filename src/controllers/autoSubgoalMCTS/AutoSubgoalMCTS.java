@@ -38,6 +38,8 @@ public class AutoSubgoalMCTS
         initialGame.setState(newInitialState);
     }
 
+    public Game getInitialState() {return initialGame.getState();}
+
     public void step()
     {
         // Selection
@@ -45,22 +47,27 @@ public class AutoSubgoalMCTS
         MCTSNode<SubgoalData> currNode = root;
         while (!game.isEnded() && currNode.data.subgoalSearch == null)
         {
+            currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
             currNode = currNode.selectUCT(explorationRate);
-            for(BaseAction action : currNode.data.macroAction)
+            for(BaseAction action : currNode.data.macroAction.actions)
             {
                 rewardAccumulator.addReward(action.apply(game));
             }
         }
+        currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
 
         if (!game.isEnded())
         {
             // Expansion
             if(currNode.data.subgoalSearch.isDone())
             {
-                currNode.data.subgoalSearch.addSubgoals(currNode);
-                for(MCTSNode<SubgoalData> child : currNode.children)
+                for(MacroAction a : currNode.data.subgoalSearch.getMacroActions())
                 {
-                    child.data.subgoalSearch = subgoalSearch.copy();
+                    SubgoalData newData = new SubgoalData();
+                    newData.subgoalSearch = subgoalSearch.copy();
+                    newData.macroAction = a;
+
+                    currNode.addChild(newData);
                 }
                 currNode.data.subgoalSearch = null;
             }
@@ -94,13 +101,13 @@ public class AutoSubgoalMCTS
             root.children.add(selectedChild);
         }
 
-        BaseAction nextAction = root.children.get(0).data.macroAction.get(0);
+        BaseAction nextAction = root.children.get(0).data.macroAction.actions.get(0);
         nextAction.repetitions--;
         if(nextAction.repetitions == 0)
         {
-            root.children.get(0).data.macroAction.remove(0);
+            root.children.get(0).data.macroAction.actions.remove(0);
             // Only one action left, aka this is our new root
-            if(root.children.get(0).data.macroAction.size() == 0)
+            if(root.children.get(0).data.macroAction.actions.size() == 0)
             {
                 root = root.children.get(0);
             }

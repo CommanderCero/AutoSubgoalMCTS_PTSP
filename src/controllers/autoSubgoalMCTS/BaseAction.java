@@ -1,7 +1,10 @@
 package controllers.autoSubgoalMCTS;
 
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
+import framework.core.Controller;
 import framework.core.Game;
+
+import java.util.Random;
 
 public class BaseAction
 {
@@ -13,6 +16,12 @@ public class BaseAction
     public BaseAction(int action)
     {
         this.lowLevelAction = action;
+        repetitions = DEFAULT_REPETITIONS;
+    }
+
+    public BaseAction()
+    {
+        this.lowLevelAction = -1;
         repetitions = DEFAULT_REPETITIONS;
     }
 
@@ -37,5 +46,10 @@ public class BaseAction
     public void apply(RewardGame state, RewardAccumulator accumulator)
     {
         accumulator.addReward(apply(state));
+    }
+
+    public void sample(Random rng)
+    {
+        lowLevelAction = rng.nextInt(Controller.NUM_ACTIONS);
     }
 }

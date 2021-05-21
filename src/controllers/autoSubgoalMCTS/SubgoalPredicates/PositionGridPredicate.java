@@ -18,6 +18,9 @@ public class PositionGridPredicate implements ISubgoalPredicate
     @Override
     public boolean isSubgoal(Game state)
     {
+        if(state.isEnded())
+            return true;
+
         Vector2i cell = getCell(state.getShip().s);
         double offsetX = (state.getShip().s.x - origin.x) - cell.x * cellSize;
         double offsetY = (state.getShip().s.y - origin.y) - cell.y * cellSize;
@@ -28,11 +31,19 @@ public class PositionGridPredicate implements ISubgoalPredicate
     @Override
     public boolean isSameSubgoal(Game state1, Game state2)
     {
-        // We ignore the fact that state1 or 2 may not be subgoals
+        if(state1.isEnded())
+        {
+            if(state2.isEnded())
+            {
+                return state1.getShip().s.sqDist(state2.getShip().s) <= epsilonSqrd;
+            }
+
+            return false;
+        }
+
         Vector2i cell1 = getCell(state1.getShip().s);
         Vector2i cell2 = getCell(state2.getShip().s);
-
-        return cell1 == cell2;
+        return cell1.equals(cell2);
     }
 
     @Override

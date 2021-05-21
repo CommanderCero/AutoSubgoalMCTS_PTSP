@@ -2,7 +2,9 @@ package controllers.autoSubgoalMCTS;
 
 import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
+import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
+import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
 import framework.core.Controller;
 import framework.core.Game;
 import framework.utils.Vector2d;
@@ -37,16 +39,22 @@ public class AutoSubgoalController extends Controller
     }
 
     private AutoSubgoalMCTS algorithm;
-
+    private Random rng;
     ArrayList<Game> states;
     ArrayList<Integer> actions;
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
         states = new ArrayList<>();
         actions = new ArrayList<>();
+        rng = new Random();
 
         RewardGame rGame = new NaiveRewardGame(game);
-        algorithm = new AutoSubgoalMCTS(rGame, new MCTSNoveltySearch(4, new PositionBehaviourFunction()), 300);
+
+        PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
+
+        //RandomPredicateSearch subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
+        MCTSNoveltySearch subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction());
+        algorithm = new AutoSubgoalMCTS(rGame, subgoalSearch, 300);
     }
 
     @Override
@@ -65,7 +73,7 @@ public class AutoSubgoalController extends Controller
         }
 
         int action = algorithm.getNextAction();
-        //System.out.println("Action: " + action + "\tSteps: " + counter);
+        System.out.println("Action: " + action + "\tSteps: " + counter);
         return action;
     }
 
@@ -74,22 +82,26 @@ public class AutoSubgoalController extends Controller
     {
         graphics.setColor(Color.yellow);
         drawSubgoals(graphics, algorithm.getRoot());
+        //PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
+        //predicate.render(graphics, algorithm.getInitialState());
     }
 
     private void drawSubgoals(Graphics2D graphics, MCTSNode<SubgoalData> node)
     {
+        if(node.data.lastSeenPosition == null)
+            return;
+
         int r = 2;
-        if(node.data.latentState != null)
-        {
-            graphics.fillOval((int)node.data.latentState[0] - r, (int)node.data.latentState[1] - r, 2 * r, 2 * r);
-        }
+        graphics.fillOval((int)node.data.lastSeenPosition.x - r, (int)node.data.lastSeenPosition.y - r, 2 * r, 2 * r);
 
         for(int i = 0; i < node.children.size(); i++)
         {
             MCTSNode<SubgoalData> child = node.children.get(i);
-            if(node.data.latentState != null) {
-                graphics.drawLine((int) node.data.latentState[0], (int) node.data.latentState[1], (int) child.data.latentState[0], (int) child.data.latentState[1]);
-            }
+            if(child.data.lastSeenPosition == null)
+                continue;
+
+
+            graphics.drawLine((int)node.data.lastSeenPosition.x, (int)node.data.lastSeenPosition.y, (int)child.data.lastSeenPosition.x, (int)child.data.lastSeenPosition.y);
             drawSubgoals(graphics, child);
         }
     }
