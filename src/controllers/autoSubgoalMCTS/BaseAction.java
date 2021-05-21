@@ -25,14 +25,6 @@ public class BaseAction
         repetitions = DEFAULT_REPETITIONS;
     }
 
-    public void apply(Game state)
-    {
-        for(int i = 0; i < repetitions; i++)
-        {
-            state.tick(lowLevelAction);
-        }
-    }
-
     public double apply(RewardGame state)
     {
         double sumBefore = state.getRewardSum();

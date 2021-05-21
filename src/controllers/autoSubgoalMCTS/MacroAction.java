@@ -1,5 +1,6 @@
 package controllers.autoSubgoalMCTS;
 
+import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import framework.core.Game;
 
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ public class MacroAction
 {
     public MacroAction() {actions = new ArrayList<>();}
 
-    public void apply(Game state)
+    public void apply(RewardGame state)
     {
         for(BaseAction a : actions)
         {

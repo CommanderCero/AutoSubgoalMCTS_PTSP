@@ -6,6 +6,7 @@ import framework.core.Controller;
 import framework.core.Game;
 
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractController extends Controller
 {
@@ -43,6 +44,7 @@ public abstract class AbstractController extends Controller
                 step(game.getCopy());
             }
         }
+        System.out.println("FMCalls: " + RewardGame.getCalls());
         return getBestAction();
     }
 
