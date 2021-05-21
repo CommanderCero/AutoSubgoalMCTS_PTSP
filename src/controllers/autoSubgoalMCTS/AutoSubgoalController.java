@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class AutoSubgoalController extends Controller
+public class AutoSubgoalController extends AbstractController
 {
     public class PositionBehaviourFunction implements IBehaviourFunction
     {
@@ -39,41 +39,25 @@ public class AutoSubgoalController extends Controller
     }
 
     private AutoSubgoalMCTS algorithm;
-    private Random rng;
-    ArrayList<Game> states;
-    ArrayList<Integer> actions;
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
-        states = new ArrayList<>();
-        actions = new ArrayList<>();
-        rng = new Random();
-
-        RewardGame rGame = new NaiveRewardGame(game);
-
         PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
 
         //RandomPredicateSearch subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
         MCTSNoveltySearch subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction());
-        algorithm = new AutoSubgoalMCTS(rGame, subgoalSearch, 300);
+        algorithm = new AutoSubgoalMCTS(subgoalSearch, 300);
     }
 
     @Override
-    public synchronized int getAction(Game game, long dueTimeMs)
+    protected void step(RewardGame game)
     {
-        algorithm.setInitialState(game.getCopy());
+        algorithm.step(game);
+    }
 
-        long startTime = System.nanoTime();
-        long timeBudgetMs = dueTimeMs - System.currentTimeMillis();
-        int counter = 0;
-        // Run until the timeBudget is used up, with a little bit of remaining time to collect the action
-        while((System.nanoTime() - startTime) / 1000000 < timeBudgetMs - 5)
-        {
-            algorithm.step();
-            counter++;
-        }
-
+    @Override
+    protected int getBestAction()
+    {
         int action = algorithm.getNextAction();
-        System.out.println("Action: " + action + "\tSteps: " + counter);
         return action;
     }
 

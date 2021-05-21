@@ -19,6 +19,7 @@ public abstract class RewardGame
     // Returns the reward for each action, useful for computing a decaying reward sum
     public double tick(int action)
     {
+        callCounter++;
         currentTickRewardSum = 0;
         tickInternal(currentState, action);
         rewardSum += currentTickRewardSum;
@@ -42,6 +43,8 @@ public abstract class RewardGame
     public double getRewardSum() { return rewardSum; }
     public Game getState() { return currentState; }
     public void setState(Game newState) { currentState = newState; }
+    public static int getCalls() {return callCounter;}
+    public static void resetCalls() {callCounter = 0;}
 
     protected abstract void tickInternal(Game state, int action);
     protected abstract RewardGame copyInternal();
@@ -54,4 +57,5 @@ public abstract class RewardGame
     private Game currentState;
     private double rewardSum;
     private double currentTickRewardSum;
+    private static int callCounter;
 }

@@ -10,7 +10,6 @@ import java.util.Collections;
 
 public class AutoSubgoalMCTS
 {
-    private RewardGame initialGame;
     private MCTSNode<SubgoalData> root;
     private ISubgoalSearch subgoalSearch;
     private int n;
@@ -21,9 +20,8 @@ public class AutoSubgoalMCTS
     public double explorationRate = Math.sqrt(2);
     public int maxSimulationSteps = 100;
 
-    public AutoSubgoalMCTS(RewardGame initialGame, ISubgoalSearch subgoalSearch, int n)
+    public AutoSubgoalMCTS(ISubgoalSearch subgoalSearch, int n)
     {
-        this.initialGame = initialGame.getCopy();
         this.root = new MCTSNode<>(new SubgoalData());
         this.root.data.subgoalSearch = subgoalSearch.copy();
         this.subgoalSearch = subgoalSearch;
@@ -33,14 +31,7 @@ public class AutoSubgoalMCTS
         macroAccumulator = new RewardAccumulator(0.99);
     }
 
-    public void setInitialState(Game newInitialState)
-    {
-        initialGame.setState(newInitialState);
-    }
-
-    public Game getInitialState() {return initialGame.getState();}
-
-    public void step()
+    public void step(RewardGame initialGame)
     {
         // Selection
         RewardGame game = initialGame.getCopy();
@@ -114,17 +105,6 @@ public class AutoSubgoalMCTS
         }
 
         return nextAction.lowLevelAction;
-    }
-
-    private void updateStatistics(MCTSNode<SubgoalData> currNode, double receivedReward)
-    {
-        //currNode.score -= (currNode.children.size() * receivedReward) / currNode.visitCount;
-        //currNode.score /= rewardAccumulator.rewardDecay;
-
-        for(MCTSNode<SubgoalData> child : currNode.children)
-        {
-            updateStatistics(child, receivedReward);
-        }
     }
 
     public MCTSNode<SubgoalData> getBestChild()

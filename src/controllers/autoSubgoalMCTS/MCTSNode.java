@@ -51,7 +51,7 @@ public class MCTSNode<Data>
 
     public MCTSNode<Data> addChild(Data childData)
     {
-        MCTSNode<Data> newChild = new MCTSNode<Data>(childData);
+        MCTSNode<Data> newChild = new MCTSNode<>(childData);
         newChild.parent = this;
         children.add(newChild);
         return newChild;
