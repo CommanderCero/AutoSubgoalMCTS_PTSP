@@ -6,7 +6,6 @@ import framework.core.Controller;
 import framework.core.Game;
 
 import java.util.Random;
-import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractController extends Controller
 {

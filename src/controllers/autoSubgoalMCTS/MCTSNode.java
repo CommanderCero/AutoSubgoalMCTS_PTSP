@@ -1,6 +1,7 @@
 package controllers.autoSubgoalMCTS;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MCTSNode<Data>
 {
@@ -25,7 +26,7 @@ public class MCTSNode<Data>
         this.data = data;
     }
 
-    public MCTSNode<Data> selectUCT(double explorationRate)
+    public MCTSNode<Data> selectUCT(double explorationRate, Random rng)
     {
         double highestUCT = Double.NEGATIVE_INFINITY;
         MCTSNode<Data> bestChild = null;
@@ -38,6 +39,7 @@ public class MCTSNode<Data>
 
             double uct = (child.score - lowerBound) / (upperBound - lowerBound + 1);
             uct += explorationRate * Math.sqrt(Math.log(visitCount) / child.visitCount);
+            uct += rng.nextDouble() * 1e-8; // Resolve ties randomly
 
             if (uct > highestUCT)
             {

@@ -30,7 +30,7 @@ public class MyMCTSController extends AbstractController
     }
 
     public double explorationRate = Math.sqrt(2);
-    public int maxRolloutDepth = 8;
+    public int maxRolloutDepth = 12;
 
     private MCTSNode<MCTSData> root;
     private Graph graph;
@@ -58,20 +58,25 @@ public class MyMCTSController extends AbstractController
         // Selection
         int depth = 0;
         MCTSNode<MCTSData> currNode = root;
-        while (currNode.children.size() == NUM_ACTIONS)
+        while (currNode.children.size() == NUM_ACTIONS && depth < maxRolloutDepth)
         {
-            currNode = currNode.selectUCT(explorationRate);
+            currNode = currNode.selectUCT(explorationRate, rng);
             currNode.data.action.apply(game, accumulator);
             depth++;
         }
 
-        if (!game.isEnded())
+        if (!game.isEnded() && depth < maxRolloutDepth)
         {
             // Expansion
             int nextAction = currNode.children.size();
             MCTSData newData = new MCTSData(nextAction, game.getState().getShip().s);
             currNode = currNode.addChild(newData);
             depth++;
+
+            if(depth > maxRolloutDepth)
+            {
+                System.out.println("Error");
+            }
 
             // Simulation
             rollout(game, depth, accumulator);

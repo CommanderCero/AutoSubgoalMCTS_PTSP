@@ -44,8 +44,8 @@ public class AutoSubgoalController extends AbstractController
         PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
 
         //RandomPredicateSearch subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
-        MCTSNoveltySearch subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction());
-        algorithm = new AutoSubgoalMCTS(subgoalSearch, 300);
+        MCTSNoveltySearch subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
+        algorithm = new AutoSubgoalMCTS(subgoalSearch, 300, rng);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class AutoSubgoalController extends AbstractController
     protected int getBestAction()
     {
         int action = algorithm.getNextAction();
-        return action;
+        return action == -1 ? rng.nextInt(NUM_ACTIONS) : action;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class AutoSubgoalController extends AbstractController
         graphics.setColor(Color.yellow);
         drawSubgoals(graphics, algorithm.getRoot());
         //PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
-        //predicate.render(graphics, algorithm.getInitialState());
+        //predicate.render(graphics, lastState);
     }
 
     private void drawSubgoals(Graphics2D graphics, MCTSNode<SubgoalData> node)

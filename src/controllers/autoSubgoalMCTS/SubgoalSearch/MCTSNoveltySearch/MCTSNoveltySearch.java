@@ -9,13 +9,16 @@ import framework.core.Game;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 public class MCTSNoveltySearch implements ISubgoalSearch
 {
-    public MCTSNoveltySearch(int trajectoryLength, IBehaviourFunction behaviourFunction)
+    public MCTSNoveltySearch(int trajectoryLength, IBehaviourFunction behaviourFunction, Random rng)
     {
         this.trajectoryLength = trajectoryLength;
         this.behaviourFunction = behaviourFunction;
+        this.rng = rng;
+
         this.root = new MCTSNode<>(new SearchData());
         this.macroAccumulator = new RewardAccumulator(0.99);
         this.latentCache = new double[behaviourFunction.getLatentSize()];
@@ -24,7 +27,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
 
     public ISubgoalSearch copy()
     {
-        MCTSNoveltySearch newSearch = new MCTSNoveltySearch(trajectoryLength, behaviourFunction);
+        MCTSNoveltySearch newSearch = new MCTSNoveltySearch(trajectoryLength, behaviourFunction, rng);
         return newSearch;
     }
 
@@ -37,7 +40,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         MCTSNode<SearchData> currNode = root;
         while(currNode.children.size() == Controller.NUM_ACTIONS)
         {
-            currNode = currNode.selectUCT(Math.sqrt(2));
+            currNode = currNode.selectUCT(Math.sqrt(2), rng);
             advanceGame(game, currNode.data.action);
         }
 
@@ -165,4 +168,5 @@ public class MCTSNoveltySearch implements ISubgoalSearch
     public IBehaviourFunction behaviourFunction;
     private double[] latentCache;
     private double[] rootCache;
+    private Random rng;
 }
