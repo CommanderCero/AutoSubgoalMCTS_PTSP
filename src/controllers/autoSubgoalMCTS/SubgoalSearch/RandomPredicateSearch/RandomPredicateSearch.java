@@ -30,15 +30,15 @@ public class RandomPredicateSearch implements ISubgoalSearch
     }
 
     @Override
-    public void step(RewardGame state)
+    public int step(RewardGame state)
     {
         stepCount++;
 
         // Sample a random macro action
         MacroAction macroAction = new MacroAction();
         double rewardBefore = state.getRewardSum();
-        int i = 0;
-        for(; i < horizon && !state.isEnded(); i++)
+        int depth = 0;
+        for(; depth < horizon && !state.isEnded(); depth++)
         {
             BaseAction action = new BaseAction();
             action.sample(rng);
@@ -54,11 +54,11 @@ public class RandomPredicateSearch implements ISubgoalSearch
 
         // Update macro actions
         boolean isTrueSubgoal = predicate.isSubgoal(state.getState());
-        boolean isHorizonSubgoal = !isTrueSubgoal && i == horizon && treatHorizonStatesAsSubgoals;
+        boolean isHorizonSubgoal = !isTrueSubgoal && depth == horizon && treatHorizonStatesAsSubgoals;
         if(isHorizonSubgoal || isTrueSubgoal)
         {
             boolean found = false;
-            for(i = 0; i < macroActions.size(); i++)
+            for(int i = 0; i < macroActions.size(); i++)
             {
                 boolean trueSubgoalCondition = isTrueSubgoal && predicate.isSameSubgoal(state.getState(), states.get(i));
                 boolean horizonSubgoalCondition = isHorizonSubgoal && predicate.isSameState(state.getState(), states.get(i));
@@ -87,6 +87,8 @@ public class RandomPredicateSearch implements ISubgoalSearch
                 macroActions.add(macroAction);
             }
         }
+
+        return depth;
     }
 
     @Override

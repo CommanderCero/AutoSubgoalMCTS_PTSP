@@ -11,29 +11,25 @@ import java.util.Random;
 
 public class AutoSubgoalMCTS
 {
-    public int maxRolloutDepth = 12;
+    public int maxRolloutDepth = 25;
 
     private MCTSNode<SubgoalData> root;
     private ISubgoalSearch subgoalSearch;
-    private int n;
     private Random rng;
 
     private RewardAccumulator rewardAccumulator;
-    private RewardAccumulator macroAccumulator;
 
     public double explorationRate = Math.sqrt(2);
     public int maxSimulationSteps = 100;
 
-    public AutoSubgoalMCTS(ISubgoalSearch subgoalSearch, int n, Random rng)
+    public AutoSubgoalMCTS(ISubgoalSearch subgoalSearch, Random rng)
     {
         this.root = new MCTSNode<>(new SubgoalData());
         this.root.data.subgoalSearch = subgoalSearch.copy();
         this.subgoalSearch = subgoalSearch;
-        this.n = n;
         this.rng = rng;
 
         rewardAccumulator = new RewardAccumulator(0.99);
-        macroAccumulator = new RewardAccumulator(0.99);
     }
 
     public void step(RewardGame initialGame)
@@ -42,17 +38,18 @@ public class AutoSubgoalMCTS
         RewardGame game = initialGame.getCopy();
         MCTSNode<SubgoalData> currNode = root;
         int depth = 0;
-        while (!game.isEnded() && currNode.data.subgoalSearch == null)
+        while (!game.isEnded() && currNode.data.subgoalSearch == null && depth < maxRolloutDepth)
         {
             currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
             currNode = currNode.selectUCT(explorationRate, rng);
             rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
+            depth += currNode.data.macroAction.size();
         }
         currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
 
-        if (!game.isEnded())
+        // Expansion
+        if (!game.isEnded() && depth < maxRolloutDepth)
         {
-            // Expansion
             if(currNode.data.subgoalSearch.isDone())
             {
                 for(MacroAction a : currNode.data.subgoalSearch.getMacroActions())
@@ -68,16 +65,18 @@ public class AutoSubgoalMCTS
                 // Execute one macro action
                 currNode = currNode.children.get(0);
                 rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
+                depth += currNode.data.macroAction.size();
             }
             else
             {
                 double rewardBefore = game.getRewardSum();
-                currNode.data.subgoalSearch.step(game);
+                depth += currNode.data.subgoalSearch.step(game);
                 rewardAccumulator.addReward(game.getRewardSum() - rewardBefore);
             }
 
             // Simulation
-            //rollout(game, depth, rewardAccumulator);
+            // Adding the reward of the whole rollout is not 100% accurate, but the best we can do
+            rewardAccumulator.addReward(rollout(game, depth, rewardAccumulator));
         }
 
         // Backpropagation
@@ -136,14 +135,16 @@ public class AutoSubgoalMCTS
         return root;
     }
 
-    private void rollout(RewardGame state, int currentDepth, RewardAccumulator accumulator)
+    private double rollout(RewardGame state, int currentDepth, RewardAccumulator accumulator)
     {
+        double rewardSum = 0;
         while(!state.isEnded() && currentDepth <= maxRolloutDepth)
         {
             BaseAction nextAction = new BaseAction(rng.nextInt(Controller.NUM_ACTIONS));
-            nextAction.apply(state, accumulator);
+            rewardSum += nextAction.apply(state);
 
             currentDepth++;
         }
+        return rewardSum;
     }
 }

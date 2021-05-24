@@ -11,7 +11,9 @@ import java.util.ArrayList;
 
 public interface ISubgoalSearch
 {
-    void step(RewardGame state);
+    // Advances the search by one step, each step has to try out one macro action
+    // Returns the length of the executed macro action
+    int step(RewardGame state);
     boolean isDone();
     ArrayList<MacroAction> getMacroActions();
     ISubgoalSearch copy();

@@ -13,6 +13,8 @@ import java.util.Random;
 
 public class MCTSNoveltySearch implements ISubgoalSearch
 {
+    public static int horizon = 4;
+
     public MCTSNoveltySearch(int trajectoryLength, IBehaviourFunction behaviourFunction, Random rng)
     {
         this.trajectoryLength = trajectoryLength;
@@ -32,31 +34,38 @@ public class MCTSNoveltySearch implements ISubgoalSearch
     }
 
     @Override
-    public void step(RewardGame game)
+    public int step(RewardGame game)
     {
         behaviourFunction.toLatent(game.getState(), rootCache);
 
         // Selection
+        int depth = 0;
         MCTSNode<SearchData> currNode = root;
-        while(currNode.children.size() == Controller.NUM_ACTIONS)
+        while(currNode.children.size() == Controller.NUM_ACTIONS && depth < horizon)
         {
             currNode = currNode.selectUCT(Math.sqrt(2), rng);
             advanceGame(game, currNode.data.action);
+            depth++;
         }
 
         // Expansion
-        BaseAction nextAction = new BaseAction(currNode.children.size());
-        advanceGame(game, nextAction);
+        if(depth < horizon)
+        {
+            BaseAction nextAction = new BaseAction(currNode.children.size());
+            advanceGame(game, nextAction);
+            depth++;
 
-        SearchData macroData = new SearchData();
-        macroData.action = nextAction;
-        macroData.latentState = new double[behaviourFunction.getLatentSize()];
-        behaviourFunction.toLatent(game.getState(), macroData.latentState);
-        currNode = currNode.addChild(macroData);
+            SearchData macroData = new SearchData();
+            macroData.action = nextAction;
+            macroData.latentState = new double[behaviourFunction.getLatentSize()];
+            behaviourFunction.toLatent(game.getState(), macroData.latentState);
+            currNode = currNode.addChild(macroData);
+        }
 
         // Backpropagation
         currNode.backpropagate(macroAccumulator.getRewardSum());
         macroAccumulator.reset();
+        return depth;
     }
 
     @Override
