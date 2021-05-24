@@ -9,14 +9,18 @@ public class MacroAction
 {
     public MacroAction() {actions = new ArrayList<>();}
 
-    public void apply(RewardGame state)
+    public double apply(RewardGame state)
     {
+        double rewardSum = 0;
         for(BaseAction a : actions)
         {
-            a.apply(state);
+            rewardSum += a.apply(state);
             if(state.isEnded())
-                return;
+            {
+                break;
+            }
         }
+        return rewardSum;
     }
 
     public int size() {return actions.size();}

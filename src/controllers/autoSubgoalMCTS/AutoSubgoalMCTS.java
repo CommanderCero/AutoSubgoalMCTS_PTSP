@@ -46,11 +46,7 @@ public class AutoSubgoalMCTS
         {
             currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
             currNode = currNode.selectUCT(explorationRate, rng);
-            for(BaseAction action : currNode.data.macroAction.actions)
-            {
-                depth++;
-                rewardAccumulator.addReward(action.apply(game));
-            }
+            rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
         }
         currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
 
@@ -68,10 +64,16 @@ public class AutoSubgoalMCTS
                     currNode.addChild(newData);
                 }
                 currNode.data.subgoalSearch = null;
+
+                // Execute one macro action
+                currNode = currNode.children.get(0);
+                rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
             }
             else
             {
+                double rewardBefore = game.getRewardSum();
                 currNode.data.subgoalSearch.step(game);
+                rewardAccumulator.addReward(game.getRewardSum() - rewardBefore);
             }
 
             // Simulation
