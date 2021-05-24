@@ -42,7 +42,7 @@ public class AutoSubgoalController extends AbstractController
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
         PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
-
+        //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
         //RandomPredicateSearch subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
         MCTSNoveltySearch subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
         algorithm = new AutoSubgoalMCTS(subgoalSearch, 300, rng);

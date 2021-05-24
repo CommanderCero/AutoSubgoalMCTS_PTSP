@@ -7,5 +7,6 @@ public interface ISubgoalPredicate
 {
     boolean isSubgoal(Game state);
     boolean isSameSubgoal(Game state1, Game state2);
+    boolean isSameState(Game state1, Game state2);
     void render(Graphics2D graphics, Game state);
 }

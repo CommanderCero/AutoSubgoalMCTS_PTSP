@@ -12,6 +12,10 @@ import java.util.Random;
 
 public class RandomPredicateSearch implements ISubgoalSearch
 {
+    // If true this algorithm behaves like the original Subgoal MCTS algorithm
+    // If false we will ignore any state that reaches the horizon, if it is not a subgoal of course
+    public static boolean treatHorizonStatesAsSubgoals = false;
+
     public RandomPredicateSearch(ISubgoalPredicate predicate, int horizon, int steps, Random rng)
     {
         this.predicate = predicate;
@@ -33,7 +37,8 @@ public class RandomPredicateSearch implements ISubgoalSearch
         // Sample a random macro action
         MacroAction macroAction = new MacroAction();
         double rewardBefore = state.getRewardSum();
-        for(int i = 0; i < horizon && !state.isEnded(); i++)
+        int i = 0;
+        for(; i < horizon && !state.isEnded(); i++)
         {
             BaseAction action = new BaseAction();
             action.sample(rng);
@@ -48,17 +53,24 @@ public class RandomPredicateSearch implements ISubgoalSearch
         double rewardAfter = state.getRewardSum();
 
         // Update macro actions
-        if(predicate.isSubgoal(state.getState()))
+        boolean isTrueSubgoal = predicate.isSubgoal(state.getState());
+        boolean isHorizonSubgoal = !isTrueSubgoal && i == horizon && treatHorizonStatesAsSubgoals;
+        if(isHorizonSubgoal || isTrueSubgoal)
         {
             boolean found = false;
-            for(int i = 0; i < macroActions.size(); i++)
+            for(i = 0; i < macroActions.size(); i++)
             {
-                if(predicate.isSameSubgoal(state.getState(), states.get(i)))
+                boolean trueSubgoalCondition = isTrueSubgoal && predicate.isSameSubgoal(state.getState(), states.get(i));
+                boolean horizonSubgoalCondition = isHorizonSubgoal && predicate.isSameState(state.getState(), states.get(i));
+                if(trueSubgoalCondition || horizonSubgoalCondition)
                 {
                     // Check if we found a better trajectory
                     if(rewards.get(i) < (rewardAfter - rewardBefore))
                     {
                         // Replace macro action
+                        // Note we do not change the state, although it may change slightly
+                        // This is to prevent a wandering subgoal when treatHorizonStatesAsSubgoals is true
+                        // Wandering occurs because we use an error margin to detect subgoals
                         macroActions.set(i, macroAction);
                     }
 

@@ -29,13 +29,19 @@ public class PositionGridPredicate implements ISubgoalPredicate
     }
 
     @Override
+    public boolean isSameState(Game state1, Game state2)
+    {
+        return state1.getShip().s.sqDist(state2.getShip().s) <= epsilonSqrd;
+    }
+
+    @Override
     public boolean isSameSubgoal(Game state1, Game state2)
     {
         if(state1.isEnded())
         {
             if(state2.isEnded())
             {
-                return state1.getShip().s.sqDist(state2.getShip().s) <= epsilonSqrd;
+                return isSameState(state1, state2);
             }
 
             return false;
