@@ -1,4 +1,4 @@
-package controllers.autoSubgoalMCTS;
+package controllers.autoSubgoalMCTS.BehaviourFunctions;
 
 import framework.core.Game;
 

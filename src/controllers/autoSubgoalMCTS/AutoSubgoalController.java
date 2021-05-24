@@ -1,71 +1,156 @@
 package controllers.autoSubgoalMCTS;
 
-import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
+import controllers.autoSubgoalMCTS.BehaviourFunctions.IBehaviourFunction;
+import controllers.autoSubgoalMCTS.BehaviourFunctions.PositionBehaviourFunction;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
+import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
-import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
 import framework.core.Controller;
 import framework.core.Game;
-import framework.utils.Vector2d;
 
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 public class AutoSubgoalController extends AbstractController
 {
-    public class PositionBehaviourFunction implements IBehaviourFunction
-    {
-        @Override
-        public void toLatent(Game state, double[] bucket)
-        {
-            bucket[0] = state.getShip().s.x;
-            bucket[1] = state.getShip().s.y;
-            // v = new Vector2d(state.getShip().v);
-            //v.normalise();
-            //bucket[2] = v.x;
-            //bucket[3] = v.y;
-        }
+    public int maxRolloutDepth = 25;
+    public double explorationRate = Math.sqrt(2);
 
-        @Override
-        public int getLatentSize()
-        {
-            return 2;
-        }
-    }
+    private MCTSNode<SubgoalData> root;
+    private ISubgoalSearch subgoalSearch;
+    private RewardAccumulator rewardAccumulator;
 
-    private AutoSubgoalMCTS algorithm;
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
         PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
         //RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
-        //RandomPredicateSearch subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
-        MCTSNoveltySearch subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
-        algorithm = new AutoSubgoalMCTS(subgoalSearch, rng);
+        //subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
+        subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
+
+        this.root = new MCTSNode<>(new SubgoalData());
+        this.root.data.subgoalSearch = subgoalSearch.copy();
+        this.subgoalSearch = subgoalSearch;
+
+        rewardAccumulator = new RewardAccumulator(0.99);
     }
 
     @Override
     protected void step(RewardGame game)
     {
-        algorithm.step(game);
+        // Selection
+        MCTSNode<SubgoalData> currNode = root;
+        int depth = 0;
+        while (!game.isEnded() && currNode.data.subgoalSearch == null && depth < maxRolloutDepth)
+        {
+            currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
+            currNode = currNode.selectUCT(explorationRate, rng);
+            rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
+            depth += currNode.data.macroAction.size();
+        }
+        currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
+
+        // Expansion
+        if (!game.isEnded() && depth < maxRolloutDepth)
+        {
+            if(currNode.data.subgoalSearch.isDone())
+            {
+                for(MacroAction a : currNode.data.subgoalSearch.getMacroActions())
+                {
+                    SubgoalData newData = new SubgoalData();
+                    newData.subgoalSearch = subgoalSearch.copy();
+                    newData.macroAction = a;
+
+                    currNode.addChild(newData);
+                }
+                currNode.data.subgoalSearch = null;
+
+                // Execute one macro action
+                currNode = currNode.children.get(0);
+                rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
+                depth += currNode.data.macroAction.size();
+            }
+            else
+            {
+                double rewardBefore = game.getRewardSum();
+                depth += currNode.data.subgoalSearch.step(game);
+                rewardAccumulator.addReward(game.getRewardSum() - rewardBefore);
+            }
+
+            // Simulation
+            // Adding the reward of the whole rollout is not 100% accurate, but the best we can do
+            rewardAccumulator.addReward(rollout(game, depth, rewardAccumulator));
+        }
+
+        // Backpropagation
+        currNode.backpropagate(rewardAccumulator.getRewardSum());
+        rewardAccumulator.reset();
     }
 
     @Override
     protected int getBestAction()
     {
-        int action = algorithm.getNextAction();
-        return action == -1 ? rng.nextInt(NUM_ACTIONS) : action;
+        if(root.children.size() == 0)
+        {
+            return rng.nextInt(NUM_ACTIONS);
+        }
+
+        if(root.children.size() > 1)
+        {
+            // Only keep the best child
+            MCTSNode<SubgoalData> selectedChild = getBestChild();
+            root.children.clear();
+            root.children.add(selectedChild);
+        }
+
+        BaseAction nextAction = root.children.get(0).data.macroAction.actions.get(0);
+        nextAction.repetitions--;
+        if(nextAction.repetitions == 0)
+        {
+            root.children.get(0).data.macroAction.actions.remove(0);
+            // Only one action left, aka this is our new root
+            if(root.children.get(0).data.macroAction.actions.size() == 0)
+            {
+                root = root.children.get(0);
+            }
+        }
+
+        return nextAction.lowLevelAction;
+    }
+
+    private MCTSNode<SubgoalData> getBestChild()
+    {
+        double maxScore = Double.NEGATIVE_INFINITY;
+        MCTSNode<SubgoalData> bestChild = null;
+        for(MCTSNode<SubgoalData> child : root.children)
+        {
+            if(child.score > maxScore)
+            {
+                maxScore = child.score;
+                bestChild = child;
+            }
+        }
+
+        return bestChild;
+    }
+
+    private double rollout(RewardGame state, int currentDepth, RewardAccumulator accumulator)
+    {
+        double rewardSum = 0;
+        while(!state.isEnded() && currentDepth <= maxRolloutDepth)
+        {
+            BaseAction nextAction = new BaseAction(rng.nextInt(Controller.NUM_ACTIONS));
+            rewardSum += nextAction.apply(state);
+
+            currentDepth++;
+        }
+        return rewardSum;
     }
 
     @Override
     public synchronized void paint(Graphics2D graphics)
     {
         graphics.setColor(Color.yellow);
-        drawSubgoals(graphics, algorithm.getRoot());
+        drawSubgoals(graphics, root);
         //PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
         //predicate.render(graphics, lastState);
     }

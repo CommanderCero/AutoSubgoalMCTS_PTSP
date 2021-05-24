@@ -17,8 +17,8 @@ public abstract class AbstractController extends Controller
 
     // Modify these parameters to adjust the conditions for all agents
     public static Random rng = new Random(2);
-    public StopCondition stopCondition = StopCondition.Time;
-    public int maxForwardCalls = 60000;
+    public StopCondition stopCondition = StopCondition.ForwardCalls;
+    public int maxForwardCalls = 80000;
 
     @Override
     public int getAction(Game a_game, long dueTimeMs)

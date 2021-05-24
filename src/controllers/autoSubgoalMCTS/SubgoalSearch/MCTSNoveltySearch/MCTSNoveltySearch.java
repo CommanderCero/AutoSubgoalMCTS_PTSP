@@ -1,12 +1,11 @@
 package controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch;
 
 import controllers.autoSubgoalMCTS.*;
+import controllers.autoSubgoalMCTS.BehaviourFunctions.IBehaviourFunction;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import framework.core.Controller;
-import framework.core.Game;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
