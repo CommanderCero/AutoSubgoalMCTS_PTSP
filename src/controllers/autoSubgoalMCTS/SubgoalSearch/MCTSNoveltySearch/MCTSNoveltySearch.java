@@ -8,12 +8,11 @@ import framework.core.Controller;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 
 public class MCTSNoveltySearch implements ISubgoalSearch
 {
-    public static int horizon = 4;
-
     public MCTSNoveltySearch(int trajectoryLength, IBehaviourFunction behaviourFunction, Random rng)
     {
         this.trajectoryLength = trajectoryLength;
@@ -21,7 +20,8 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         this.rng = rng;
 
         this.root = new MCTSNode<>(new SearchData());
-        this.macroAccumulator = new RewardAccumulator(0.99);
+        this.noveltyAccumulator = new RewardAccumulator(0.99);
+        this.rewardAccumulator = new RewardAccumulator(0.99);
         this.latentCache = new double[behaviourFunction.getLatentSize()];
         this.rootCache = new double[behaviourFunction.getLatentSize()];
     }
@@ -40,7 +40,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         // Selection
         int depth = 0;
         MCTSNode<SearchData> currNode = root;
-        while(currNode.children.size() == Controller.NUM_ACTIONS && depth < horizon)
+        while(currNode.children.size() == Controller.NUM_ACTIONS && depth < trajectoryLength)
         {
             currNode = currNode.selectUCT(Math.sqrt(2), rng);
             advanceGame(game, currNode.data.action);
@@ -48,7 +48,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         }
 
         // Expansion
-        if(depth < horizon)
+        if(depth < trajectoryLength)
         {
             BaseAction nextAction = new BaseAction(currNode.children.size());
             advanceGame(game, nextAction);
@@ -62,8 +62,15 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         }
 
         // Backpropagation
-        currNode.backpropagate(macroAccumulator.getRewardSum());
-        macroAccumulator.reset();
+        currNode.backpropagate(noveltyAccumulator.getRewardSum(), (MCTSNode<SearchData> n) ->
+        {
+            // Dirty hack to track two different statistics, in this case novelty & reward
+            n.data.reward += (rewardAccumulator.getRewardSum() - n.data.reward) / n.visitCount;
+            n.data.rewardLowerBound = Math.min(rewardAccumulator.getRewardSum(), n.data.rewardLowerBound);
+            n.data.rewardUpperBound = Math.max(rewardAccumulator.getRewardSum(), n.data.rewardUpperBound);
+        });
+        noveltyAccumulator.reset();
+        rewardAccumulator.reset();
         return depth;
     }
 
@@ -90,21 +97,55 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         int subgoalCount = (int)Math.ceil(percentage * subgoalCandidates.size());
         assert(subgoalCount > 0);
         ArrayList<MCTSNode<SearchData>> selectedSubgoals = new ArrayList<>();
+        // The first subgoal is the one with the highest reward
+        selectedSubgoals.add(subgoalCandidates.stream().max(Comparator.comparing(n -> n.data.reward)).get());
+
+        double[] noveltyCache = new double[subgoalCandidates.size()];
+        double[] rewardCache = new double[subgoalCandidates.size()];
+        double minNovelty = Double.POSITIVE_INFINITY;
+        double maxNovelty = Double.NEGATIVE_INFINITY;
         while(selectedSubgoals.size() < subgoalCount)
         {
+            // Compute the novelty & reward for each candidate
+            for(int i = 0; i < subgoalCandidates.size(); i++)
+            {
+                MCTSNode<SearchData> candidate = subgoalCandidates.get(i);
+
+                // Find the n-closest neighbors from all selected subgoals
+                int n = selectedSubgoals.size() > 3 ? 3 : selectedSubgoals.size();
+                Collections.sort(selectedSubgoals, (MCTSNode<SearchData> v1, MCTSNode<SearchData> v2) ->
+                {
+                    double v1Dist = latentDist(v1.data.latentState, candidate.data.latentState);
+                    double v2Dist = latentDist(v2.data.latentState, candidate.data.latentState);
+                    return v1Dist > v2Dist ? 1 : v1Dist < v2Dist ? -1 : 0;
+                });
+
+                // Compute novelty & rewards scores
+                noveltyCache[i] = 0;
+                rewardCache[i] = 3;
+                for(int x = 0; x < n; x++)
+                {
+                    noveltyCache[i] += latentDist(candidate.data.latentState, selectedSubgoals.get(x).data.latentState);
+                    if(selectedSubgoals.get(x).data.reward >= candidate.data.reward)
+                    {
+                        rewardCache[i]--;
+                    }
+                }
+                minNovelty = Math.min(minNovelty, noveltyCache[i]);
+                maxNovelty = Math.max(maxNovelty, noveltyCache[i]);
+            }
+
             // Find best candidate
             MCTSNode<SearchData> bestCandidate = null;
             double bestScore = Double.NEGATIVE_INFINITY;
-            for(MCTSNode<SearchData> candidate : subgoalCandidates)
+            for(int i = 0; i < subgoalCandidates.size(); i++)
             {
-                double score = 0;
-                for(int i = 0; i < selectedSubgoals.size(); i++)
-                {
-                    score += latentDist(candidate.data.latentState, selectedSubgoals.get(i).data.latentState);
-                }
+                double score = (noveltyCache[i] - minNovelty) / (maxNovelty - minNovelty + 1e-8);
+                score = 0.5 * score + 0.5 * (rewardCache[i] / 3);
+
                 if(score > bestScore)
                 {
-                    bestCandidate = candidate;
+                    bestCandidate = subgoalCandidates.get(i);
                     bestScore = score;
                 }
             }
@@ -152,11 +193,10 @@ public class MCTSNoveltySearch implements ISubgoalSearch
     {
         behaviourFunction.toLatent(game.getState(), latentCache);
         double distanceBefore = latentDist(rootCache, latentCache);
-        // ToDo return reward
-        action.apply(game);
+        rewardAccumulator.addReward(action.apply(game));
         behaviourFunction.toLatent(game.getState(), latentCache);
         double distanceAfter = latentDist(rootCache, latentCache);
-        macroAccumulator.addReward(distanceAfter - distanceBefore);
+        noveltyAccumulator.addReward(distanceAfter - distanceBefore);
     }
 
     private double latentDist(double[] v1, double[] v2)
@@ -172,7 +212,8 @@ public class MCTSNoveltySearch implements ISubgoalSearch
 
     private MCTSNode<SearchData> root;
     private int trajectoryLength;
-    private RewardAccumulator macroAccumulator;
+    private RewardAccumulator noveltyAccumulator;
+    private RewardAccumulator rewardAccumulator;
     public IBehaviourFunction behaviourFunction;
     private double[] latentCache;
     private double[] rootCache;

@@ -36,6 +36,11 @@ public class CSVWriter implements AutoCloseable
         append(Integer.toString(value));
     }
 
+    public void append(long value) throws IOException
+    {
+        append(Long.toString(value));
+    }
+
     public void close() throws IOException
     {
         writer.close();

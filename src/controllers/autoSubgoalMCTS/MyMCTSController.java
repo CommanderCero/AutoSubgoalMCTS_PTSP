@@ -61,7 +61,7 @@ public class MyMCTSController extends AbstractController
         while (currNode.children.size() == NUM_ACTIONS && depth < maxRolloutDepth)
         {
             currNode = currNode.selectUCT(explorationRate, rng);
-            currNode.data.action.apply(game, accumulator);
+            accumulator.addReward(currNode.data.action.apply(game));
             depth++;
         }
 
@@ -108,7 +108,7 @@ public class MyMCTSController extends AbstractController
         while(!state.isEnded() && currentDepth <= maxRolloutDepth)
         {
             BaseAction nextAction = new BaseAction(rng.nextInt(NUM_ACTIONS));
-            nextAction.apply(state, accumulator);
+            accumulator.addReward(nextAction.apply(state));
 
             currentDepth++;
         }

@@ -9,16 +9,16 @@ import java.util.Random;
 
 public abstract class AbstractController extends Controller
 {
-    enum StopCondition
+    public enum StopCondition
     {
         Time,
         ForwardCalls
     }
 
     // Modify these parameters to adjust the conditions for all agents
-    public static Random rng = new Random(2);
-    public StopCondition stopCondition = StopCondition.ForwardCalls;
-    public int maxForwardCalls = 80000;
+    public static Random rng = new Random(6);
+    public static StopCondition stopCondition = StopCondition.Time;
+    public static int maxForwardCalls = 70000;
 
     @Override
     public int getAction(Game a_game, long dueTimeMs)
@@ -34,7 +34,6 @@ public abstract class AbstractController extends Controller
             {
                 step(game.getCopy());
             }
-            System.out.println(RewardGame.getCalls());
         }
         else if(stopCondition == StopCondition.ForwardCalls)
         {
@@ -43,7 +42,7 @@ public abstract class AbstractController extends Controller
                 step(game.getCopy());
             }
         }
-        System.out.println("FMCalls: " + RewardGame.getCalls());
+        //System.out.println("FMCalls: " + RewardGame.getCalls());
         return getBestAction();
     }
 

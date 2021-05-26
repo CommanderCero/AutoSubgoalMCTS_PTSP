@@ -35,11 +35,6 @@ public class BaseAction
         return state.getRewardSum() - sumBefore;
     }
 
-    public void apply(RewardGame state, RewardAccumulator accumulator)
-    {
-        accumulator.addReward(apply(state));
-    }
-
     public void sample(Random rng)
     {
         lowLevelAction = rng.nextInt(Controller.NUM_ACTIONS);

@@ -13,23 +13,28 @@ import java.awt.*;
 
 public class AutoSubgoalController extends AbstractController
 {
+    // Ugly hack
+    public static ISubgoalSearch subgoalSearch;
+
     public int maxRolloutDepth = 25;
     public double explorationRate = Math.sqrt(2);
 
     private MCTSNode<SubgoalData> root;
-    private ISubgoalSearch subgoalSearch;
     private RewardAccumulator rewardAccumulator;
 
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
-        PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
-        //RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
-        //subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
-        subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
+        // Failsafe
+        if(subgoalSearch == null)
+        {
+            PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
+            //RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
+            //subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
+            subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
+        }
 
         this.root = new MCTSNode<>(new SubgoalData());
         this.root.data.subgoalSearch = subgoalSearch.copy();
-        this.subgoalSearch = subgoalSearch;
 
         rewardAccumulator = new RewardAccumulator(0.99);
     }
@@ -108,9 +113,10 @@ public class AutoSubgoalController extends AbstractController
         {
             root.children.get(0).data.macroAction.actions.remove(0);
             // Only one action left, aka this is our new root
-            if(root.children.get(0).data.macroAction.actions.size() == 0)
+            if(root.children.get(0).data.macroAction.size() == 0)
             {
                 root = root.children.get(0);
+                root.parent = null;
             }
         }
 
