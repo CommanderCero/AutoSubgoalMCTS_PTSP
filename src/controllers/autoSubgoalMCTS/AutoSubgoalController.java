@@ -6,6 +6,7 @@ import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
+import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
 import framework.core.Controller;
 import framework.core.Game;
 
@@ -27,9 +28,9 @@ public class AutoSubgoalController extends AbstractController
         // Failsafe
         if(subgoalSearch == null)
         {
-            PositionGridPredicate predicate = new PositionGridPredicate(25, 5);
-            //RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
-            //subgoalSearch = new RandomPredicateSearch(predicate, 5, 400, rng);
+            //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
+            //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
+            //subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
             subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
         }
 

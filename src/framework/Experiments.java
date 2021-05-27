@@ -7,6 +7,7 @@ import controllers.autoSubgoalMCTS.MyMCTSController;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
+import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
 import controllers.keycontroller.KeyController;
 import framework.core.Exec;
 import framework.core.Game;
@@ -167,12 +168,22 @@ public class Experiments extends Exec
         //runExperiments(numTrials, "VanillaMCTS");
 
         // Original Sugoal MCTS algorithm
+        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
+        RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
+        AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, AbstractController.rng);
+        runExperiments(numTrials, "S-MCTS");
 
         // Modified Subgoal MCTS algorithm - Does not treat every horizon-state as a subgoal
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
+        //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
+        //AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, AbstractController.rng);
+        //runExperiments(numTrials, "MS-Subgoal-MCTS");
 
         // Quality Diversity Subgoal MCTS algorithm - The algorithm proposed by us
-        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-        AutoSubgoalController.subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
-        runExperiments(numTrials, "QD-Subgoal-MCTS");
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        //AutoSubgoalController.subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
+        //runExperiments(numTrials, "QD-Subgoal-MCTS");
     }
 }
