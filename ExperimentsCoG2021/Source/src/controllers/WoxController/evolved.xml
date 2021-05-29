@@ -1,0 +1,5 @@
+<object type="controllers.WoxController.Bias" id="0">
+    <field name="m_selectThrust" type="double" value="0.8" />
+    <field name="m_selectStraight" type="double" value="0.6" />
+    <field name="m_selectRight" type="double" value="0.7" />
+</object>
