@@ -16,7 +16,7 @@ public abstract class AbstractController extends Controller
     }
 
     // Modify these parameters to adjust the conditions for all agents
-    public static Random rng = new Random(43534);
+    public static Random rng = new Random(2);
     public static StopCondition stopCondition = StopCondition.ForwardCalls;
     public static int maxForwardCalls = 70000;
 
