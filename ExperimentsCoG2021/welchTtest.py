@@ -16,6 +16,7 @@ if __name__ == "__main__":
         "S-MCTS": "./S-MCTS/S-MCTS_2021_05_26_12_58.csv",
         "MS-MCTS": "./MS-MCTS/MS-Subgoal-MCTS_2021_05_26_10_51.csv",
         "QD-S-MCTS": "./QD-S-MCTS/QD-Subgoal-MCTS_2021_05_25_18_18.csv",
+        "Vanilla GA": "./VanillaGA/VanillaGA_2021_06_03_14_48.csv",
     }
     
     # Prepare data
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     
     
     # Test significance if QD-S-MCTS visited more waypoints
-    for alg in ["Vanilla MCTS", "S-MCTS", "MS-MCTS"]:
+    for alg in ["Vanilla MCTS", "S-MCTS", "MS-MCTS", "Vanilla GA"]:
         results = stats.ttest_ind(waypointSamples["QD-S-MCTS"], waypointSamples[alg],
                                   alternative="greater",
                                   equal_var=False,
@@ -57,7 +58,7 @@ if __name__ == "__main__":
         print()
         
     # Test significance if QD-S-MCTS needed less steps on average to reach a waypoint than other algorithms
-    for alg in ["Vanilla MCTS", "S-MCTS", "MS-MCTS"]:
+    for alg in ["Vanilla MCTS", "S-MCTS", "MS-MCTS", "Vanilla GA"]:
         results = stats.ttest_ind(stepsPerWaypointSamples["QD-S-MCTS"], stepsPerWaypointSamples[alg],
                                   alternative="less",
                                   equal_var=False,

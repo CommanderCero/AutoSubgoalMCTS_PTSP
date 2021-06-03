@@ -168,11 +168,11 @@ public class Experiments extends Exec
         //runExperiments(numTrials, "VanillaMCTS");
 
         // Original Sugoal MCTS algorithm
-        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-        PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
-        RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
-        AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, AbstractController.rng);
-        runExperiments(numTrials, "S-MCTS");
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
+        //RandomPredicateSearch.treatHorizonStatesAsSubgoals = true;
+        //AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, AbstractController.rng);
+        //runExperiments(numTrials, "S-MCTS");
 
         // Modified Subgoal MCTS algorithm - Does not treat every horizon-state as a subgoal
         //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
@@ -185,5 +185,9 @@ public class Experiments extends Exec
         //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
         //AutoSubgoalController.subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
         //runExperiments(numTrials, "QD-Subgoal-MCTS");
+
+        // Vanilla Genetic algorithm
+        m_controllerName = "controllers.autoSubgoalMCTS.GAController";
+        runExperiments(numTrials, "VanillaGA");
     }
 }

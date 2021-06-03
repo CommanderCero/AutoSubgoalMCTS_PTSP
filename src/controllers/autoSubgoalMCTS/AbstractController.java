@@ -16,15 +16,21 @@ public abstract class AbstractController extends Controller
     }
 
     // Modify these parameters to adjust the conditions for all agents
-    public static Random rng = new Random(2);
+    public static Random rng = new Random(6);
     public static StopCondition stopCondition = StopCondition.ForwardCalls;
     public static int maxForwardCalls = 70000;
+
+    private BaseAction currAction = null;
 
     @Override
     public int getAction(Game a_game, long dueTimeMs)
     {
         RewardGame.resetCalls();
-        RewardGame game = new NaiveRewardGame(a_game);
+        RewardGame game = new NaiveRewardGame(a_game.getCopy());
+        // If we are currently executing an action, start searching after we've executed it
+        if(currAction != null)
+            currAction.apply(game);
+
         if(stopCondition == StopCondition.Time)
         {
             long startTime = System.nanoTime();
@@ -43,9 +49,19 @@ public abstract class AbstractController extends Controller
             }
         }
         //System.out.println("FMCalls: " + RewardGame.getCalls());
-        return getBestAction();
+
+        // Return an action
+        if(currAction == null)
+        {
+            currAction = getBestAction();
+        }
+        int nextAction = currAction.lowLevelAction;
+        currAction.repetitions--;
+        if(currAction.repetitions == 0)
+            currAction = null;
+        return nextAction;
     }
 
     protected abstract void step(RewardGame game);
-    protected abstract int getBestAction();
+    protected abstract BaseAction getBestAction();
 }

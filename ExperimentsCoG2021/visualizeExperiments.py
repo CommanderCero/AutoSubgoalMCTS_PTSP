@@ -16,6 +16,7 @@ if __name__ == "__main__":
         "S-MCTS": "./S-MCTS/S-MCTS_2021_05_26_12_58.csv",
         "MS-MCTS": "./MS-MCTS/MS-Subgoal-MCTS_2021_05_26_10_51.csv",
         "QD-S-MCTS": "./QD-S-MCTS/QD-Subgoal-MCTS_2021_05_25_18_18.csv",
+        "Vanilla GA": "./VanillaGA/VanillaGA_2021_06_03_14_48.csv",
     }
     
     avgWaypoints = {}

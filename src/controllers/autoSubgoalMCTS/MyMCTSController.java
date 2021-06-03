@@ -88,19 +88,12 @@ public class MyMCTSController extends AbstractController
     }
 
     @Override
-    protected int getBestAction()
+    protected BaseAction getBestAction()
     {
         MCTSNode<MCTSData> bestChild = root.getChildWithHighestReturn();
-        // Reuse tree
-        bestChild.data.action.repetitions--;
-        if(bestChild.data.action.repetitions == 0)
-        {
-            root = bestChild;
-            root.parent = null;
-        }
-
-        //System.out.println("Steps=" + counter + "\tTotal root visits=" + root.visitCount);
-        return bestChild.data.action.lowLevelAction;
+        root = bestChild;
+        root.parent = null;
+        return root.data.action;
     }
 
     private void rollout(RewardGame state, int currentDepth, RewardAccumulator accumulator)

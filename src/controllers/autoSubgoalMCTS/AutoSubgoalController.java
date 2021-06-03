@@ -93,11 +93,12 @@ public class AutoSubgoalController extends AbstractController
     }
 
     @Override
-    protected int getBestAction()
+    protected BaseAction getBestAction()
     {
         if(root.children.size() == 0)
         {
-            return rng.nextInt(NUM_ACTIONS);
+            System.out.println("Warning no subgoals found in time");
+            return new BaseAction(rng.nextInt(NUM_ACTIONS));
         }
 
         if(root.children.size() > 1)
@@ -109,19 +110,15 @@ public class AutoSubgoalController extends AbstractController
         }
 
         BaseAction nextAction = root.children.get(0).data.macroAction.actions.get(0);
-        nextAction.repetitions--;
-        if(nextAction.repetitions == 0)
+        root.children.get(0).data.macroAction.actions.remove(0);
+        // Only one action left, aka this is our new root
+        if(root.children.get(0).data.macroAction.size() == 0)
         {
-            root.children.get(0).data.macroAction.actions.remove(0);
-            // Only one action left, aka this is our new root
-            if(root.children.get(0).data.macroAction.size() == 0)
-            {
-                root = root.children.get(0);
-                root.parent = null;
-            }
+            root = root.children.get(0);
+            root.parent = null;
         }
 
-        return nextAction.lowLevelAction;
+        return nextAction;
     }
 
     private MCTSNode<SubgoalData> getBestChild()
