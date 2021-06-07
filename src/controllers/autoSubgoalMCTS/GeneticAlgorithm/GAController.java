@@ -1,23 +1,28 @@
-package controllers.autoSubgoalMCTS;
+package controllers.autoSubgoalMCTS.GeneticAlgorithm;
 
+import controllers.autoSubgoalMCTS.AbstractController;
+import controllers.autoSubgoalMCTS.BaseAction;
 import controllers.autoSubgoalMCTS.GeneticAlgorithm.Genome;
+import controllers.autoSubgoalMCTS.RewardAccumulator;
 import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import framework.core.Controller;
 import framework.core.Game;
+import framework.utils.Vector2d;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
+import java.util.Vector;
 
 public class GAController extends AbstractController
 {
     public static int GenomeLength = 20;
     public static int PopulationSize = 50;
 
-    ArrayList<Genome> currPopulation;
-    ArrayList<Genome> nextPopulation;
+    ArrayList<Genome<SearchData>> currPopulation;
+    ArrayList<Genome<SearchData>> nextPopulation;
     RewardAccumulator rewardAccumulator;
 
     public GAController(Game game, long dueTimeMs)
@@ -28,8 +33,8 @@ public class GAController extends AbstractController
 
         for(int i = 0; i < PopulationSize; i++)
         {
-            currPopulation.add(new Genome(GenomeLength, rng));
-            nextPopulation.add(new Genome(GenomeLength, rng));
+            currPopulation.add(new Genome(GenomeLength, rng, new SearchData(GenomeLength + 1)));
+            nextPopulation.add(new Genome(GenomeLength, rng, new SearchData(GenomeLength + 1)));
         }
 
         // ToDo Do not hardcode NaiveRewardGame here
@@ -134,23 +139,31 @@ public class GAController extends AbstractController
     {
         for(int x = 0; x < currPopulation.size(); x++)
         {
-            Genome g = currPopulation.get(x);
-            for(int i = 0; i < g.trajectory.length - 1; i++)
+            Genome<SearchData> g = currPopulation.get(x);
+            for(int i = 0; i < g.data.trajectory.length - 1; i++)
             {
-                graphics.drawLine((int)g.trajectory[i].x, (int)g.trajectory[i].y, (int)g.trajectory[i + 1].x, (int)g.trajectory[i + 1].y);
+                graphics.drawLine((int)g.data.trajectory[i].x, (int)g.data.trajectory[i].y, (int)g.data.trajectory[i + 1].x, (int)g.data.trajectory[i + 1].y);
             }
         }
     }
 
-    private void evaluateGenomes(ArrayList<Genome> genomes, RewardGame game)
+    private void evaluateGenomes(ArrayList<Genome<SearchData>> genomes, RewardGame game)
     {
         for(int i = 0; i < genomes.size(); i++)
         {
-            Genome currGenome = genomes.get(i);
+            Genome<SearchData> currGenome = genomes.get(i);
             RewardGame copy = game.getCopy();
 
             rewardAccumulator.reset();
-            currGenome.apply(copy, rewardAccumulator);
+            BaseAction baseAction = new BaseAction(-1);
+            int x = 0;
+            for(; x < currGenome.actions.length && !copy.isEnded(); x++)
+            {
+                currGenome.data.trajectory[x] = copy.getState().getShip().s.copy();
+                baseAction.lowLevelAction = currGenome.actions[x];
+                rewardAccumulator.addReward(baseAction.apply(copy));
+            }
+            currGenome.data.trajectory[x] = copy.getState().getShip().s.copy();
             currGenome.score = rewardAccumulator.getRewardSum();
         }
     }

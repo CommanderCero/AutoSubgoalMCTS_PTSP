@@ -7,6 +7,7 @@ import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
+import controllers.autoSubgoalMCTS.SubgoalSearch.ScalarNSLCSearch.ScalarNSLCSearch;
 import framework.core.Controller;
 import framework.core.Game;
 
@@ -31,7 +32,8 @@ public class AutoSubgoalController extends AbstractController
             //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
             //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
             //subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
-            subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
+            //subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
+            subgoalSearch = new ScalarNSLCSearch(new PositionBehaviourFunction(), rng, 200, 5);
         }
 
         this.root = new MCTSNode<>(new SubgoalData());

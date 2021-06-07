@@ -8,16 +8,16 @@ import framework.utils.Vector2d;
 
 import java.util.Random;
 
-public class Genome
+public class Genome<Data>
 {
     public double score;
     public int[] actions;
-    public Vector2d[] trajectory;
+    public Data data;
 
-    public Genome(int size, Random rng)
+    public Genome(int size, Random rng, Data data)
     {
         actions = new int[size];
-        trajectory = new Vector2d[size + 1];
+        this.data = data;
         randomize(rng);
     }
 
@@ -31,7 +31,6 @@ public class Genome
 
     public void crossover(Genome other, Random rng)
     {
-        double rand = rng.nextDouble();
         int crossoverPoint = rng.nextInt(actions.length - 1);
         for (int i = 0; i <= crossoverPoint; i++)
         {
@@ -53,25 +52,13 @@ public class Genome
         }
     }
 
-    public void apply(RewardGame game, RewardAccumulator accumulator)
-    {
-        BaseAction baseAction = new BaseAction(-1);
-        int i = 0;
-        for(; i < actions.length && !game.isEnded(); i++)
-        {
-            trajectory[i] = game.getState().getShip().s.copy();
-            baseAction.lowLevelAction = actions[i];
-            accumulator.addReward(baseAction.apply(game));
-        }
-        trajectory[i] = game.getState().getShip().s.copy();
-    }
-
-    public void copyOver(Genome reference)
+    public void copyOver(Genome<Data> reference)
     {
         score = reference.score;
         for(int i = 0; i < actions.length; i++)
         {
             actions[i] = reference.actions[i];
+            data = reference.data;
         }
     }
 }

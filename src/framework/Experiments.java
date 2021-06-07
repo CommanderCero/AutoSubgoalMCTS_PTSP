@@ -187,7 +187,7 @@ public class Experiments extends Exec
         //runExperiments(numTrials, "QD-Subgoal-MCTS");
 
         // Vanilla Genetic algorithm
-        m_controllerName = "controllers.autoSubgoalMCTS.GAController";
+        m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController";
         runExperiments(numTrials, "VanillaGA");
     }
 }
