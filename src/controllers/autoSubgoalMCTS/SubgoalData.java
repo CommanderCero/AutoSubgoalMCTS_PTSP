@@ -13,6 +13,7 @@ public class SubgoalData
     }
 
     public Vector2d lastSeenPosition;
+    public double[] latentState;
     public MacroAction macroAction;
     public ISubgoalSearch subgoalSearch;
 };

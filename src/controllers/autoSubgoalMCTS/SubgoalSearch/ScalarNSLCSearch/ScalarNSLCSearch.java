@@ -1,11 +1,8 @@
 package controllers.autoSubgoalMCTS.SubgoalSearch.ScalarNSLCSearch;
 
-import controllers.autoSubgoalMCTS.BaseAction;
+import controllers.autoSubgoalMCTS.*;
 import controllers.autoSubgoalMCTS.BehaviourFunctions.IBehaviourFunction;
 import controllers.autoSubgoalMCTS.GeneticAlgorithm.Genome;
-import controllers.autoSubgoalMCTS.MCTSNode;
-import controllers.autoSubgoalMCTS.MacroAction;
-import controllers.autoSubgoalMCTS.RewardAccumulator;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ScalarNSLCSearch.SearchData;
@@ -164,7 +161,7 @@ public class ScalarNSLCSearch implements ISubgoalSearch
     }
 
     @Override
-    public ISubgoalSearch copy()
+    public ISubgoalSearch createNewSearch(MCTSNode<SubgoalData> parentNode)
     {
         return new ScalarNSLCSearch(behaviourFunction, rng, maxSteps, maxStagnationCount);
     }

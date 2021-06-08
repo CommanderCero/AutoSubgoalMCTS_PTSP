@@ -16,5 +16,5 @@ public interface ISubgoalSearch
     int step(RewardGame state);
     boolean isDone();
     ArrayList<MacroAction> getMacroActions();
-    ISubgoalSearch copy();
+    ISubgoalSearch createNewSearch(MCTSNode<SubgoalData> parentNode);
 }

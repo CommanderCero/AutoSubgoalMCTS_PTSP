@@ -26,7 +26,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         this.rootCache = new double[behaviourFunction.getLatentSize()];
     }
 
-    public ISubgoalSearch copy()
+    public ISubgoalSearch createNewSearch(MCTSNode<SubgoalData> parentNode)
     {
         MCTSNoveltySearch newSearch = new MCTSNoveltySearch(trajectoryLength, behaviourFunction, rng);
         return newSearch;

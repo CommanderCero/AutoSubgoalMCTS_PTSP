@@ -6,6 +6,7 @@ import controllers.autoSubgoalMCTS.BehaviourFunctions.PositionBehaviourFunction;
 import controllers.autoSubgoalMCTS.MyMCTSController;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
+import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.HistoryMCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
 import controllers.keycontroller.KeyController;
@@ -182,12 +183,17 @@ public class Experiments extends Exec
         //runExperiments(numTrials, "MS-Subgoal-MCTS");
 
         // Quality Diversity Subgoal MCTS algorithm - The algorithm proposed by us
+        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
+        AutoSubgoalController.subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
+        runExperiments(numTrials, "QD-Subgoal-MCTS");
+
+        // Quality Diversity Subgoal MCTS algorithm with subgoal history - The algorithm proposed by us
         //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-        //AutoSubgoalController.subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
-        //runExperiments(numTrials, "QD-Subgoal-MCTS");
+        //AutoSubgoalController.subgoalSearch = new HistoryMCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
+        //runExperiments(numTrials, "History-QD-MCTS");
 
         // Vanilla Genetic algorithm
-        m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController";
-        runExperiments(numTrials, "VanillaGA");
+        // m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController";
+        // runExperiments(numTrials, "VanillaGA");
     }
 }

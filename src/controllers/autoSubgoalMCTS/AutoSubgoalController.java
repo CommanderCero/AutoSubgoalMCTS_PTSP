@@ -3,11 +3,9 @@ package controllers.autoSubgoalMCTS;
 import controllers.autoSubgoalMCTS.BehaviourFunctions.IBehaviourFunction;
 import controllers.autoSubgoalMCTS.BehaviourFunctions.PositionBehaviourFunction;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
-import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
+import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.HistoryMCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
-import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
-import controllers.autoSubgoalMCTS.SubgoalSearch.ScalarNSLCSearch.ScalarNSLCSearch;
 import framework.core.Controller;
 import framework.core.Game;
 
@@ -23,21 +21,25 @@ public class AutoSubgoalController extends AbstractController
 
     private MCTSNode<SubgoalData> root;
     private RewardAccumulator rewardAccumulator;
+    private IBehaviourFunction behaviourFunction;
 
     public AutoSubgoalController(Game game, long dueTimeMs)
     {
         // Failsafe
+        behaviourFunction = new PositionBehaviourFunction();
         if(subgoalSearch == null)
         {
             //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
             //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
             //subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
-            //subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), rng);
-            subgoalSearch = new ScalarNSLCSearch(new PositionBehaviourFunction(), rng, 200, 5);
+            //subgoalSearch = new MCTSNoveltySearch(4, behaviourFunction, rng);
+            subgoalSearch = new HistoryMCTSNoveltySearch(4, behaviourFunction, rng);
+            //subgoalSearch = new ScalarNSLCSearch(behaviourFunction, rng, 200, 5);
         }
 
         this.root = new MCTSNode<>(new SubgoalData());
-        this.root.data.subgoalSearch = subgoalSearch.copy();
+        this.root.data.latentState = new double[behaviourFunction.getLatentSize()];
+        this.root.data.subgoalSearch = subgoalSearch.createNewSearch(this.root);
 
         rewardAccumulator = new RewardAccumulator(0.99);
     }
@@ -51,11 +53,14 @@ public class AutoSubgoalController extends AbstractController
         while (!game.isEnded() && currNode.data.subgoalSearch == null && depth < maxRolloutDepth)
         {
             currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
+            behaviourFunction.toLatent(game.getState(), currNode.data.latentState);
+
             currNode = currNode.selectUCT(explorationRate, rng);
             rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
             depth += currNode.data.macroAction.size();
         }
         currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
+        behaviourFunction.toLatent(game.getState(), currNode.data.latentState);
 
         // Expansion
         if (!game.isEnded() && depth < maxRolloutDepth)
@@ -65,10 +70,10 @@ public class AutoSubgoalController extends AbstractController
                 for(MacroAction a : currNode.data.subgoalSearch.getMacroActions())
                 {
                     SubgoalData newData = new SubgoalData();
-                    newData.subgoalSearch = subgoalSearch.copy();
+                    MCTSNode<SubgoalData> newNode = currNode.addChild(newData);
+                    newData.subgoalSearch = subgoalSearch.createNewSearch(newNode);
                     newData.macroAction = a;
-
-                    currNode.addChild(newData);
+                    newData.latentState = new double[behaviourFunction.getLatentSize()];
                 }
                 currNode.data.subgoalSearch = null;
 

@@ -1,8 +1,10 @@
 package controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch;
 
 import controllers.autoSubgoalMCTS.BaseAction;
+import controllers.autoSubgoalMCTS.MCTSNode;
 import controllers.autoSubgoalMCTS.MacroAction;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
+import controllers.autoSubgoalMCTS.SubgoalData;
 import controllers.autoSubgoalMCTS.SubgoalPredicates.ISubgoalPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import framework.core.Game;
@@ -111,7 +113,7 @@ public class RandomPredicateSearch implements ISubgoalSearch
     }
 
     @Override
-    public ISubgoalSearch copy()
+    public ISubgoalSearch createNewSearch(MCTSNode<SubgoalData> parentNode)
     {
         RandomPredicateSearch subgoalSearch = new RandomPredicateSearch(predicate, horizon, steps, rng);
         return subgoalSearch;

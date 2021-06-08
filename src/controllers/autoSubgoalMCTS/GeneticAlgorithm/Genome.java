@@ -42,7 +42,7 @@ public class Genome<Data>
 
     public void mutate(Random rng)
     {
-        double mutationRate = 0.01;
+        double mutationRate = 1. / actions.length;
         for (int i = 0; i < actions.length; i++)
         {
             if (rng.nextDouble() <= mutationRate)
