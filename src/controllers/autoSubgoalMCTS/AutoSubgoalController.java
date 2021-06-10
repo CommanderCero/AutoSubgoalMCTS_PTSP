@@ -6,18 +6,22 @@ import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.HistoryMCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
+import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.SearchData;
 import framework.core.Controller;
 import framework.core.Game;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 public class AutoSubgoalController extends AbstractController
 {
     // Ugly hack
     public static ISubgoalSearch subgoalSearch;
+    public static double explorationRate = Math.sqrt(2);
 
     public int maxRolloutDepth = 25;
-    public double explorationRate = Math.sqrt(2);
 
     private MCTSNode<SubgoalData> root;
     private RewardAccumulator rewardAccumulator;
@@ -32,8 +36,8 @@ public class AutoSubgoalController extends AbstractController
             //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
             //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
             //subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
-            //subgoalSearch = new MCTSNoveltySearch(4, behaviourFunction, rng);
-            subgoalSearch = new HistoryMCTSNoveltySearch(4, behaviourFunction, rng);
+            subgoalSearch = new MCTSNoveltySearch(4, behaviourFunction, rng);
+            //subgoalSearch = new HistoryMCTSNoveltySearch(4, behaviourFunction, rng);
             //subgoalSearch = new ScalarNSLCSearch(behaviourFunction, rng, 200, 5);
         }
 
@@ -41,24 +45,27 @@ public class AutoSubgoalController extends AbstractController
         this.root.data.latentState = new double[behaviourFunction.getLatentSize()];
         this.root.data.subgoalSearch = subgoalSearch.createNewSearch(this.root);
 
-        rewardAccumulator = new RewardAccumulator(0.99);
+        rewardAccumulator = new RewardAccumulator(1);
     }
 
     @Override
     protected void step(RewardGame game)
     {
         // Selection
+        ArrayList<MCTSNode<SubgoalData>> subgoalHistory = new ArrayList<>();
         MCTSNode<SubgoalData> currNode = root;
         int depth = 0;
         while (!game.isEnded() && currNode.data.subgoalSearch == null && depth < maxRolloutDepth)
         {
+            subgoalHistory.add(currNode);
             currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
             behaviourFunction.toLatent(game.getState(), currNode.data.latentState);
 
-            currNode = currNode.selectUCT(explorationRate, rng);
+            currNode = selectUCT(currNode, explorationRate, rng);
             rewardAccumulator.addReward(currNode.data.macroAction.apply(game));
             depth += currNode.data.macroAction.size();
         }
+        subgoalHistory.add(currNode);
         currNode.data.lastSeenPosition = game.getState().getShip().s.copy();
         behaviourFunction.toLatent(game.getState(), currNode.data.latentState);
 
@@ -90,12 +97,35 @@ public class AutoSubgoalController extends AbstractController
             }
 
             // Simulation
-            // Adding the reward of the whole rollout is not 100% accurate, but the best we can do
             rewardAccumulator.addReward(rollout(game, depth, rewardAccumulator));
         }
 
         // Backpropagation
-        currNode.backpropagate(rewardAccumulator.getRewardSum());
+        double noveltyScore = 0;
+        double[] currLatentPos = new double[behaviourFunction.getLatentSize()];
+        behaviourFunction.toLatent(game.getState(), currLatentPos);
+        // Find the n-closest neighbors from all subgoals
+        int n = subgoalHistory.size() > 3 ? 3 : subgoalHistory.size();
+        Collections.sort(subgoalHistory, (MCTSNode<SubgoalData> v1, MCTSNode<SubgoalData> v2) ->
+        {
+            double v1Dist = latentDist(v1.data.latentState, currLatentPos);
+            double v2Dist = latentDist(v2.data.latentState, currLatentPos);
+            return v1Dist > v2Dist ? 1 : v1Dist < v2Dist ? -1 : 0;
+        });
+
+        for(int i = 0; i < n; i++)
+        {
+            noveltyScore += latentDist(currLatentPos, subgoalHistory.get(i).data.latentState);
+        }
+        noveltyScore /= n;
+
+        double test = noveltyScore;
+        currNode.backpropagate(rewardAccumulator.getRewardSum(), node ->
+        {
+            node.data.noveltyScore += (test - node.data.noveltyScore) / node.visitCount;
+            node.data.noveltyLowerBound = Math.min(test, node.data.noveltyLowerBound);
+            node.data.noveltyUpperBound = Math.max(test, node.data.noveltyUpperBound);
+        });
         rewardAccumulator.reset();
     }
 
@@ -184,5 +214,41 @@ public class AutoSubgoalController extends AbstractController
             graphics.drawLine((int)node.data.lastSeenPosition.x, (int)node.data.lastSeenPosition.y, (int)child.data.lastSeenPosition.x, (int)child.data.lastSeenPosition.y);
             drawSubgoals(graphics, child);
         }
+    }
+
+    private MCTSNode<SubgoalData> selectUCT(MCTSNode<SubgoalData> node, double explorationRate, Random rng)
+    {
+        double highestUCT = Double.NEGATIVE_INFINITY;
+        MCTSNode<SubgoalData> bestChild = null;
+        for (MCTSNode<SubgoalData> child : node.children)
+        {
+            if (child.fullyExplored)
+                continue;
+            if (child.visitCount == 0)
+                return child;
+
+            double uct = (child.score - node.lowerBound) / (node.upperBound - node.lowerBound + 1);
+            uct += explorationRate * Math.sqrt(Math.log(node.visitCount) / child.visitCount);
+            uct += rng.nextDouble() * 1e-8; // Resolve ties randomly
+
+            if (uct > highestUCT)
+            {
+                highestUCT = uct;
+                bestChild = child;
+            }
+        }
+
+        return bestChild;
+    }
+
+    private double latentDist(double[] v1, double[] v2)
+    {
+        double sumSquared = 0;
+        for(int i = 0; i < v1.length; i++)
+        {
+            double delta = v1[i] - v2[i];
+            sumSquared += delta * delta;
+        }
+        return Math.sqrt(sumSquared);
     }
 }

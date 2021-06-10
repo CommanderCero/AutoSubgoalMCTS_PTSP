@@ -1,0 +1,62 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import os
+import seaborn as sns
+
+def getMapName(path):
+    rawName = os.path.splitext(os.path.basename(path))[0]
+    # We now have ptsp_map$ID$, remove the ptsp_
+    return rawName.split("_")[1]
+
+if __name__ == "__main__":
+    # Load experiments to display
+    experiments = {
+        "Dynamic 0.01": "./Dynamic-0.01/QD-MCTS-Dynamic-0.01_2021_06_09_15_45.csv",
+        "Dynamic Sqrt(2)": "./Dynamic-Sqrt(2)/QD-MCTS-Dynamic-Sqrt(2)_2021_06_10_08_19.csv",
+        "Dynamic 4": "./Dynamic-4/QD-MCTS-Dynamic-4_2021_06_10_08_19.csv",
+        #"Static 0.01": "./Static-0.01/QD-MCTS-Static-0.01_2021_06_09_15_45.csv",
+        #"Static Sqrt(2)": "./Static-Sqrt(2)/QD-MCTS-Static-Sqrt(2)_2021_06_10_08_18.csv",
+        #"Static 4": "./Static-4/QD-MCTS-Static-4_2021_06_10_08_19.csv",
+    }
+    
+    avgWaypoints = {}
+    avgStepsPerWaypoint = {}
+    for key in experiments:
+        data = pd.read_csv(experiments[key], delimiter="\t")
+        # Shorten map name to only contain contain "map$id$"
+        data["MapName"] = [getMapName(name) for name in data["MapName"]]
+        
+        data["StepsPerWaypoint"] = data["Steps"] / (data["WaypointsVisited"] + 1)
+        mapAvg = data.groupby("MapName").mean()
+        
+        avgWaypoints[key] = mapAvg["WaypointsVisited"]
+        avgStepsPerWaypoint[key] = mapAvg["StepsPerWaypoint"]
+    
+    # Create plot for avg waypoints visited
+    avgWaypointDf = pd.DataFrame(avgWaypoints).reset_index()
+    flatDf = avgWaypointDf.melt(id_vars="MapName")
+    g = sns.catplot(kind="bar", x="value", y="MapName", hue="variable", data=flatDf, legend=False)
+    g.despine(right=True)
+    for ax in g.axes.flat:
+        ax.grid(True, axis='x')
+        ax.set_axisbelow(True)
+    plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.18), ncol=len(avgWaypointDf.columns), frameon=False)
+    plt.xticks(range(0, 11))
+    plt.ylabel("")
+    plt.xlabel("Avg. Waypoints Visited")
+    g.savefig("avgWaypointsVisited.png", bbox_inches='tight')
+    
+    # Create plot for avg steps per waypoint
+    avgStepsDf = pd.DataFrame(avgStepsPerWaypoint).reset_index()
+    flatDf = avgStepsDf.melt(id_vars="MapName")
+    g = sns.catplot(kind="bar", x="value", y="MapName", hue="variable", data=flatDf, legend=False)
+    g.despine(right=True)
+    for ax in g.axes.flat:
+        ax.grid(True, axis='x')
+        ax.set_axisbelow(True)
+    plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.18), ncol=len(avgStepsDf.columns), frameon=False)
+    plt.xticks(range(0, 1001, 100))
+    plt.ylabel("")
+    plt.xlabel("Avg. Steps per Waypoint")
+    g.savefig("stepsPerWaypoint.png", bbox_inches='tight')

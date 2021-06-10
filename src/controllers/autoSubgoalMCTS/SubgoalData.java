@@ -14,6 +14,9 @@ public class SubgoalData
 
     public Vector2d lastSeenPosition;
     public double[] latentState;
+    public double noveltyScore;
+    public double noveltyLowerBound;
+    public double noveltyUpperBound;
     public MacroAction macroAction;
     public ISubgoalSearch subgoalSearch;
 };
