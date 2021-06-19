@@ -13,6 +13,9 @@ import java.util.Random;
 
 public class MCTSNoveltySearch implements ISubgoalSearch
 {
+    public static double explorationRate = Math.sqrt(2);
+    public static int maxSteps = 400;
+
     public MCTSNoveltySearch(int trajectoryLength, IBehaviourFunction behaviourFunction, Random rng)
     {
         this.trajectoryLength = trajectoryLength;
@@ -42,7 +45,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         MCTSNode<SearchData> currNode = root;
         while(currNode.children.size() == Controller.NUM_ACTIONS && depth < trajectoryLength)
         {
-            currNode = currNode.selectUCT(Math.sqrt(2), rng);
+            currNode = currNode.selectUCT(explorationRate, rng);
             advanceGame(game, currNode.data.action);
             depth++;
         }
@@ -77,7 +80,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
     @Override
     public boolean isDone()
     {
-        return root.visitCount >= 400;
+        return root.visitCount >= maxSteps;
     }
 
     @Override

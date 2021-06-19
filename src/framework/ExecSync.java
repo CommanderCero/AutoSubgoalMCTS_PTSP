@@ -6,12 +6,15 @@ import controllers.keycontroller.KeyController;
 import framework.core.*;
 import framework.utils.JEasyFrame;
 
+import ntbea.params.DoubleParam;
+
 import java.awt.*;
 import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 
 
 /**
@@ -23,111 +26,6 @@ import java.util.Date;
 @SuppressWarnings("unused")
 public class ExecSync extends Exec
 {
-
-    /**
-     * For running multiple games without visuals, in several maps (m_mapNames)
-     * Running many games and looking at the average score (and standard deviation/error) helps to get a better
-     * idea of how well the controller is likely to do in the competition. It waits until the controller responds.
-     *
-     * @param trials The number of trials to be executed
-     */
-    public static void runExperiments(int trials, String experimentName) throws IOException
-    {
-        // Prepare file writer
-        Format formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm");
-        String dateString = formatter.format(new Date(System.currentTimeMillis()));
-        String filePath = String.format("%s_%s.csv", experimentName, dateString);
-        try(CSVWriter writer = new CSVWriter(filePath, new String[]{"Trial", "MapName", "MaxWaypoints", "WaypointsVisited", "Steps"}))
-        {
-            //Prepare the average results.
-            double avgTotalWaypoints=0;
-            double avgTotalTimeSpent=0;
-            int totalDisqualifications=0;
-            int totalNumGamesPlayed=0;
-            boolean moreMaps = true;
-
-            for(int m = 0; moreMaps && m < m_mapNames.length; ++m)
-            {
-                String mapName = m_mapNames[m];
-                double avgWaypoints=0;
-                double avgTimeSpent=0;
-                int numGamesPlayed = 0;
-
-                if(m_verbose)
-                {
-                    System.out.println("--------");
-                    System.out.println("Running " + m_controllerName + " in map " + mapName + "...");
-                }
-
-                //For each trial...
-                for(int i=0;i<trials;i++)
-                {
-                    System.out.println("Running trial " + i + "...");
-                    // ... create a new game.
-                    if(!prepareGame())
-                        continue;
-
-                    numGamesPlayed++; //another game
-
-                    //PLay the game until the end.
-                    while(!m_game.isEnded())
-                    {
-                        //When the result is expected:
-                        long due = System.currentTimeMillis()+PTSPConstants.ACTION_TIME_MS;
-
-                        //Advance the game.
-                        m_game.tick(m_controller.getAction(m_game.getCopy(), due));
-                    }
-
-                    //Update the averages with the results of this trial.
-                    avgWaypoints += m_game.getWaypointsVisited();
-                    avgTimeSpent += m_game.getTotalTime();
-
-                    //Print the results.
-                    if(m_verbose)
-                    {
-                        System.out.print(i+"\t");
-                        m_game.printResults();
-                    }
-
-                    //And save the route, if requested:
-                    if(m_writeOutput)
-                        m_game.saveRoute();
-
-                    // Save to csv file
-                    writer.append(i + 1);
-                    writer.append(mapName);
-                    writer.append(m_game.getWaypoints().size());
-                    writer.append(m_game.getWaypointsVisited());
-                    writer.append(m_game.getTotalTime());
-                }
-
-                moreMaps = m_game.advanceMap();
-
-                avgTotalWaypoints += (avgWaypoints / numGamesPlayed);
-                avgTotalTimeSpent += (avgTimeSpent / numGamesPlayed);
-                totalDisqualifications += (trials - numGamesPlayed);
-                totalNumGamesPlayed += numGamesPlayed;
-
-                //Print the average score.
-                if(m_verbose)
-                {
-                    System.out.println("--------");
-                    System.out.format("Average waypoints: %.3f, average time spent: %.3f\n", (avgWaypoints / numGamesPlayed), (avgTimeSpent / numGamesPlayed));
-                    System.out.println("Disqualifications: " + (trials - numGamesPlayed) + "/" + trials);
-                }
-            }
-
-            //Print the average score.
-            if(m_verbose)
-            {
-                System.out.println("-------- Final score --------");
-                System.out.format("Average waypoints: %.3f, average time spent: %.3f\n", (avgTotalWaypoints / m_mapNames.length), (avgTotalTimeSpent / m_mapNames.length));
-                System.out.println("Disqualifications: " + (trials*m_mapNames.length - totalNumGamesPlayed) + "/" + trials*m_mapNames.length);
-            }
-        }
-    }
-
     /**
      * Run a game in : the game waits ONE map. In order to slow thing down in case
      * the controllers return very quickly, a time limit can be used.
@@ -139,8 +37,9 @@ public class ExecSync extends Exec
     public static void runGame(boolean visual,int delay)
     {
         //Get the game ready.
-        if(!prepareGame())
+        if(!prepareGame(m_mapNames[0]))
             return;
+        m_game.randomizeWaypoints(20, new Random());
 
         //Indicate what are we running
         if(m_verbose) System.out.println("Running " + m_controllerName + " in map " + m_game.getMap().getFilename() + "...");
@@ -209,11 +108,12 @@ public class ExecSync extends Exec
 
         //m_mapNames = new String[]{"test2.txt"};
 
+        //m_controllerName = "controllers.mcts.MCTSController";
         //m_controllerName = "controllers.greedy.GreedyController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.simpleGA.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
-        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
-        //m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
+        m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
 
         m_visibility = true; //Set here if the graphics must be displayed or not (for those modes where graphics are allowed).
@@ -228,7 +128,7 @@ public class ExecSync extends Exec
         //runExperiments(numTrials, "MCTS");
         //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
         //runExperiments(numTrials, "AutoSubgoalMCTS");
-        //m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController";
+        //m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS";
         //runExperiments(numTrials, "NaiveMCTS");
 
         /////// 2. Runs once in a map, supplying frame rate:

@@ -20,6 +20,7 @@ public class GAController extends AbstractController
 {
     public static int GenomeLength = 20;
     public static int PopulationSize = 50;
+    public static double MutationRate = 1. / GenomeLength;
 
     ArrayList<Genome<SearchData>> currPopulation;
     ArrayList<Genome<SearchData>> nextPopulation;
@@ -46,6 +47,8 @@ public class GAController extends AbstractController
     {
         // Keep a percentage of elite genomes
         int eliteCount = (int)(currPopulation.size() * 0.2);
+        if(eliteCount % 2 == 1)
+            eliteCount -= 1; // Make sure it's a multiple of 2 to not mess up the crossover part
         currPopulation.sort(Comparator.comparingDouble((g) -> -g.score));
         for(int i = 0; i < eliteCount; i++)
         {
@@ -99,7 +102,7 @@ public class GAController extends AbstractController
         // Mutation
         for(int i = eliteCount; i < nextPopulation.size(); i++)
         {
-            nextPopulation.get(i).mutate(rng);
+            nextPopulation.get(i).mutate(MutationRate, rng);
         }
 
         // Update scores

@@ -16,6 +16,7 @@ public class ScalarNSLCSearch implements ISubgoalSearch
 {
     public static int GenomeLength = 8;
     public static int PopulationSize = 25;
+    public static double MutationRate = 1. / GenomeLength;
 
     ArrayList<Genome<SearchData>> currPopulation;
     ArrayList<Genome<SearchData>> nextPopulation;
@@ -137,7 +138,7 @@ public class ScalarNSLCSearch implements ISubgoalSearch
         // Mutation
         for(int i = eliteCount; i < nextPopulation.size(); i++)
         {
-            nextPopulation.get(i).mutate(rng);
+            nextPopulation.get(i).mutate(MutationRate, rng);
         }
 
         return GenomeLength;

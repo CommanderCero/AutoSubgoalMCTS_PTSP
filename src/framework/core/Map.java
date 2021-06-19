@@ -4,6 +4,7 @@ import framework.utils.File2String;
 import framework.utils.Vector2d;
 import javax.swing.*;
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * This class represents the map where the game is played. An interesting method of this class is LineOfSight, that can be used
@@ -452,6 +453,5 @@ public class Map extends JComponent
 
         return copied;
     }
-
 }
 

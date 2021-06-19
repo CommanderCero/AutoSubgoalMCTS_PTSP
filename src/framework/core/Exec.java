@@ -175,6 +175,14 @@ public class Exec
         return instanceController();
     }
 
+    protected static boolean prepareGame(String mapName)
+    {
+        //Create the game instance.
+        m_game = new Game(mapName);
+        //and the controller
+        return instanceController();
+    }
+
     /**
      * Waits until the next step.
      * @param duration Amount of time to wait for.

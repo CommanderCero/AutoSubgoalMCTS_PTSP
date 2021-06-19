@@ -20,11 +20,6 @@ import java.util.*;
 public class Game
 {
     /**
-     * Objects of the game.
-     */
-    private LinkedList<GameObject> m_gameObjects;
-
-    /**
      * Map of the game.
      */
     public static Map[] m_maps;
@@ -75,11 +70,6 @@ public class Game
     private LinkedList<Waypoint> m_waypoints;
 
     /**
-     * Number of waypoints to collect/visit.
-     */
-    private int m_numWaypoints;
-
-    /**
      * Order of waypoints visited so far.
      */
     private ArrayList<Integer> m_visitOrder;
@@ -89,7 +79,6 @@ public class Game
      */
     public Game()
     {
-        m_gameObjects = new LinkedList<GameObject>();
         m_waypoints = new LinkedList<Waypoint>();
         m_visitOrder = new ArrayList<Integer>();
     }
@@ -109,9 +98,6 @@ public class Game
         //It'll be started when the ship makes a move.
         m_started = m_gameEnded = false;
 
-        //Game objects container
-        m_gameObjects = new LinkedList<GameObject>();
-
         //List of waypoints of the map.
         m_waypoints = new LinkedList<Waypoint>();
 
@@ -126,12 +112,10 @@ public class Game
         //Initialize some variables
         m_size = new Dimension(getMap().getMapChar().length, getMap().getMapChar()[0].length);
 
-        //Number of waypoints to be collected.
-        m_waypointsLeft = m_numWaypoints;
-
         //Create the ship of the game and add it to the game objects
         m_ship = new Ship(this, getMap().getStartingPoint());
-        m_gameObjects.add(m_ship);
+
+        m_waypointsLeft = m_waypoints.size();
     }
 
     /**
@@ -151,15 +135,11 @@ public class Game
         //It'll be started when the ship makes a move.
         m_started = m_gameEnded = false;
 
-        //Game objects container
-        m_gameObjects = new LinkedList<GameObject>();
-
         //Order of visits.
         m_visitOrder = new ArrayList<Integer>();
 
         //List of waypoints of the map.
         m_waypoints = new LinkedList<Waypoint>();
-        m_numWaypoints = 0;
 
         //Copy the waypoints.
         for(int i = 0; i < wayPoints.size(); ++i)
@@ -176,12 +156,8 @@ public class Game
         //Initialize some variables
         m_size = new Dimension(getMap().getMapChar().length, getMap().getMapChar()[0].length);
 
-        //Number of waypoints to be collected.
-        m_waypointsLeft = m_numWaypoints;
-
         //Create the ship of the game and add it to the game objects
         m_ship = new Ship(this, getMap().getStartingPoint());
-        m_gameObjects.add(m_ship);
     }
 
     /**
@@ -198,9 +174,6 @@ public class Game
 
         //It'll be started when the ship makes a move.
         m_started = m_gameEnded = false;
-
-        //Game objects container
-        m_gameObjects = new LinkedList<GameObject>();
 
         //Order of visits.
         m_visitOrder = new ArrayList<Integer>();
@@ -220,7 +193,6 @@ public class Game
             }
         }else if(m_currentMap < m_maps.length)
         {
-            m_numWaypoints = 0;
             LinkedList<Vector2d> positions = m_maps[m_currentMap].getWaypointPositions();
             for(Vector2d pos : positions)
             {
@@ -231,12 +203,8 @@ public class Game
         //Initialize some variables
         m_size = new Dimension(getMap().getMapChar().length, getMap().getMapChar()[0].length);
 
-        //Number of waypoints to be collected.
-        m_waypointsLeft = m_numWaypoints;
-
         //Create the ship of the game and add it to the game objects
         m_ship = new Ship(this, getMap().getStartingPoint());
-        m_gameObjects.add(m_ship);
     }
 
     /**
@@ -332,16 +300,6 @@ public class Game
         return routeFile.replace(":",".");
     }
 
-
-    /**
-     * Adds a game object.
-     * @param a_go Game object to add.
-     */
-    public void addGameObject(GameObject a_go)
-    {
-        m_gameObjects.add(a_go);
-    }
-
     /**
      * Prints the final results to the output console.
      */
@@ -364,7 +322,7 @@ public class Game
      */
     public int getWaypointsVisited()
     {
-        return (m_numWaypoints - getWaypointsLeft());
+        return (m_waypoints.size() - getWaypointsLeft());
     }
 
     /**
@@ -391,21 +349,10 @@ public class Game
      */
     public void addWaypoint(Waypoint a_way)
     {
-        if(m_numWaypoints < 10)
-        {
-            m_waypoints.add(a_way);
-            m_gameObjects.add(a_way);
-            m_numWaypoints++;
-        }
+        m_waypoints.add(a_way);
     }
 
     /***** GETTERS AND SETTERS ****/
-
-    /**
-     * Returns the objects of the game.
-     * @return the game objects.
-     */
-    public LinkedList<GameObject> getGameObjects() {return m_gameObjects;}
 
     /**
      * Gets the map of the game.
@@ -523,7 +470,6 @@ public class Game
         copied.setTotalTime(m_totalTime);
         copied.setStarted(m_started);
         copied.setWaypointsLeft(m_waypointsLeft);
-        copied.addGameObject(copied.getShip());
 
         //Copy waypoints
         for(Waypoint way : m_waypoints)
@@ -536,8 +482,44 @@ public class Game
         {
             copied.addCollected(i);
         }
-
-
         return copied;
+    }
+
+    public void randomizeWaypoints(int numWaypoints, Random rng)
+    {
+        m_waypoints.clear();
+        for(int i =0; i < numWaypoints; i++)
+        {
+            int xPos = rng.nextInt(getMapSize().width);
+            int yPos = rng.nextInt(getMapSize().height);
+            while(isCircleOverlapping(xPos, yPos, Waypoint.RADIUS))
+            {
+                xPos = rng.nextInt(getMapSize().width);
+                yPos = rng.nextInt(getMapSize().height);
+            }
+            addWaypoint(new Waypoint(this, new Vector2d(xPos, yPos)));
+        }
+        m_waypointsLeft = numWaypoints;
+    }
+
+    private boolean isCircleOverlapping(int xPos, int yPos, int radius)
+    {
+        for(int dy = -radius / 2; dy < radius / 2; dy++)
+        {
+            for(int dx = -radius / 2; dx < radius / 2; dx++)
+            {
+                int x = xPos + dx;
+                int y = yPos + dy;
+                if(getMap().isOutsideBounds(x, y))
+                    continue;
+
+                if(getMap().getMapChar()[x][y] != Map.NIL && getMap().getMapChar()[x][y] != Map.WAYPOINT)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

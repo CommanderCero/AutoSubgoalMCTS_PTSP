@@ -144,10 +144,12 @@ public class PTSPView extends JComponent
         }
 
         //Paint all objects of the game.
-        synchronized (Game.class) {
-            for (GameObject go : m_game.getGameObjects()) {
-                go.draw(g);
-            }
+        synchronized (Game.class)
+        {
+            for(Waypoint p : m_game.getWaypoints())
+                p.draw(g);
+
+            m_game.getShip().draw(g);
         }
 
         //Update positions to draw trajectory.

@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ptsp">
+    <output-path>$PROJECT_DIR$/out/artifacts/ptsp</output-path>
+    <root id="archive" name="ptsp.jar">
+      <element id="module-output" name="the-ptsp-competition" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jdom.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/anaconda3/envs/masterThesis/share/py4j/py4j0.10.9.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/ntbea-0.91-beta/out/artifacts/ntbea_jar/ntbea.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

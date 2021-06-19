@@ -164,7 +164,7 @@ public class Experiments extends Exec
         m_verbose = true; // Print debug info
 
         // Vanilla MCTS
-        //m_controllerName = "controllers.autoSubgoalMCTS.MyMCTSController";
+        //m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS";
         //runExperiments(numTrials, "VanillaMCTS");
 
         // Original Sugoal MCTS algorithm

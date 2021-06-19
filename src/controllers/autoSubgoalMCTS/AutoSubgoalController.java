@@ -3,10 +3,12 @@ package controllers.autoSubgoalMCTS;
 import controllers.autoSubgoalMCTS.BehaviourFunctions.IBehaviourFunction;
 import controllers.autoSubgoalMCTS.BehaviourFunctions.PositionBehaviourFunction;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
+import controllers.autoSubgoalMCTS.SubgoalPredicates.PositionGridPredicate;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.HistoryMCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.SearchData;
+import controllers.autoSubgoalMCTS.SubgoalSearch.RandomPredicateSearch.RandomPredicateSearch;
 import framework.core.Controller;
 import framework.core.Game;
 
@@ -19,9 +21,9 @@ public class AutoSubgoalController extends AbstractController
 {
     // Ugly hack
     public static ISubgoalSearch subgoalSearch;
-    public static double explorationRate = Math.sqrt(2);
+    public static double explorationRate = 4;
 
-    public int maxRolloutDepth = 25;
+    public static int maxRolloutDepth = 25;
 
     private MCTSNode<SubgoalData> root;
     private RewardAccumulator rewardAccumulator;
@@ -33,10 +35,10 @@ public class AutoSubgoalController extends AbstractController
         behaviourFunction = new PositionBehaviourFunction();
         if(subgoalSearch == null)
         {
-            //PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
-            //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
-            //subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
-            subgoalSearch = new MCTSNoveltySearch(4, behaviourFunction, rng);
+            PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
+            RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
+            subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
+            //subgoalSearch = new MCTSNoveltySearch(4, behaviourFunction, rng);
             //subgoalSearch = new HistoryMCTSNoveltySearch(4, behaviourFunction, rng);
             //subgoalSearch = new ScalarNSLCSearch(behaviourFunction, rng, 200, 5);
         }

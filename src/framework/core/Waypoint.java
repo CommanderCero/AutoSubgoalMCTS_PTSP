@@ -86,9 +86,10 @@ public class Waypoint extends GameObject
     {
         double xd = s.x - a_pos.x;
         double yd = s.y - a_pos.y;
-        double d = Math.sqrt(xd*xd+yd*yd);
+        double d = xd*xd+yd*yd;
 
-        return d<(a_radius+this.radius);
+        int radSum = a_radius+this.radius;
+        return d< radSum * radSum;
     }
 
     /**

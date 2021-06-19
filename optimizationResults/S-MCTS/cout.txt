@@ -1,0 +1,19 @@
+--------
+Running controllers.autoSubgoalMCTS.AutoSubgoalController in map maps/StageA/ptsp_map56.map...
+Running trial 0...
+Warning no subgoals found in time
+0	Time out. Final score: 0 waypoints in 1000 steps.
+--------
+Average waypoints: 0,000, average time spent: 1000,000
+Disqualifications: 0/1
+-------- Final score --------
+Average waypoints: 0,000, average time spent: 1000,000
+Disqualifications: 0/1
+--------
+Running controllers.autoSubgoalMCTS.AutoSubgoalController in map maps/StageA/ptsp_map56.map...
+Running trial 0...
+Warning no subgoals found in time
+--------
+Running controllers.autoSubgoalMCTS.AutoSubgoalController in map ./maps\StageA\ptsp_map01.map...
+Running trial 0...
+Warning no subgoals found in time

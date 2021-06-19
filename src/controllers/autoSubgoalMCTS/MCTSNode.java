@@ -113,15 +113,16 @@ public class MCTSNode<Data>
         }
     }
 
-    public MCTSNode<Data> getChildWithHighestReturn()
+    public MCTSNode<Data> getChildWithHighestReturn(Random rng)
     {
         double bestScore = Double.NEGATIVE_INFINITY;
         MCTSNode<Data> bestChild = null;
         for(MCTSNode<Data> child : children)
         {
-            if(child.score > bestScore)
+            double score = child.score + rng.nextDouble() * 1e-8; // Resolve ties randomly
+            if(score > bestScore)
             {
-                bestScore = child.score;
+                bestScore = score;
                 bestChild = child;
             }
         }

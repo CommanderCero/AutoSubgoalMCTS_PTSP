@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
-      <module name="the-ptsp-competition" target="9" />
+      <module name="the-ptsp-competition" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>
