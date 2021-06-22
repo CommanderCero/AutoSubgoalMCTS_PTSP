@@ -1,5 +1,6 @@
 package framework;
 
+import controllers.autoSubgoalMCTS.AbstractController;
 import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.keycontroller.KeyController;
@@ -39,7 +40,7 @@ public class ExecSync extends Exec
         //Get the game ready.
         if(!prepareGame(m_mapNames[0]))
             return;
-        m_game.randomizeWaypoints(20, new Random());
+        m_game.randomizeWaypoints(20, AbstractController.rng);
 
         //Indicate what are we running
         if(m_verbose) System.out.println("Running " + m_controllerName + " in map " + m_game.getMap().getFilename() + "...");
@@ -112,8 +113,8 @@ public class ExecSync extends Exec
         //m_controllerName = "controllers.greedy.GreedyController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.simpleGA.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
-        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
-        m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS"; //Set here the controller name. Leave it to null to play with KeyController.
+        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
+        //m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
 
         m_visibility = true; //Set here if the graphics must be displayed or not (for those modes where graphics are allowed).
