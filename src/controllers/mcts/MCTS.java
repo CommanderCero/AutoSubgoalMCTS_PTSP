@@ -620,7 +620,7 @@ public class MCTS
     public Waypoint getNextWaypointInPath(Game a_gameCopy)
     {
         try{
-        LinkedList<Waypoint> waypoints = a_gameCopy.getWaypoints();
+        ArrayList<Waypoint> waypoints = a_gameCopy.getWaypoints();
         int nVisited = a_gameCopy.getWaypointsVisited();
         if(nVisited == waypoints.size())
             return null;
@@ -637,7 +637,7 @@ public class MCTS
     {
         int[] w;
         try{
-            LinkedList<Waypoint> waypoints = a_gameCopy.getWaypoints();
+            ArrayList<Waypoint> waypoints = a_gameCopy.getWaypoints();
 
             int nVisited = a_gameCopy.getWaypointsVisited();
             if(nVisited == waypoints.size())

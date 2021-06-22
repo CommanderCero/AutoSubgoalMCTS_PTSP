@@ -42,7 +42,7 @@ public class GameEvaluator
     {
         m_nextWaypoints = null;
         try{
-            LinkedList<Waypoint> waypoints = a_gameState.getWaypoints();
+            ArrayList<Waypoint> waypoints = a_gameState.getWaypoints();
 
             int nVisited = a_gameState.getWaypointsVisited();
             if(nVisited != waypoints.size())
@@ -261,7 +261,7 @@ public class GameEvaluator
     public Waypoint getNextWaypointInPath(Game a_gameCopy)
     {
         try{
-        LinkedList<Waypoint> waypoints = a_gameCopy.getWaypoints();
+        ArrayList<Waypoint> waypoints = a_gameCopy.getWaypoints();
         int nVisited = a_gameCopy.getWaypointsVisited();
         if(nVisited == waypoints.size())
             return null;

@@ -67,7 +67,7 @@ public class Game
     /**
      * List of waypoints in the map.
      */
-    private LinkedList<Waypoint> m_waypoints;
+    private ArrayList<Waypoint> m_waypoints;
 
     /**
      * Order of waypoints visited so far.
@@ -79,7 +79,7 @@ public class Game
      */
     public Game()
     {
-        m_waypoints = new LinkedList<Waypoint>();
+        m_waypoints = new ArrayList<>();
         m_visitOrder = new ArrayList<Integer>();
     }
 
@@ -99,7 +99,7 @@ public class Game
         m_started = m_gameEnded = false;
 
         //List of waypoints of the map.
-        m_waypoints = new LinkedList<Waypoint>();
+        m_waypoints = new ArrayList<>();
 
         //Order of visits.
         m_visitOrder = new ArrayList<Integer>();
@@ -139,7 +139,7 @@ public class Game
         m_visitOrder = new ArrayList<Integer>();
 
         //List of waypoints of the map.
-        m_waypoints = new LinkedList<Waypoint>();
+        m_waypoints = new ArrayList<>();
 
         //Copy the waypoints.
         for(int i = 0; i < wayPoints.size(); ++i)
@@ -179,7 +179,7 @@ public class Game
         m_visitOrder = new ArrayList<Integer>();
 
         //List of waypoints of the map.
-        m_waypoints = new LinkedList<Waypoint>();
+        m_waypoints = new ArrayList<>();
 
         //Create and read the map.
         if(m_maps == null)
@@ -381,7 +381,7 @@ public class Game
      * Gets all the waypoints of the map.
      * @return all the waypoints of the map.
      */
-    public LinkedList<Waypoint> getWaypoints() {return m_waypoints;}
+    public ArrayList<Waypoint> getWaypoints() {return m_waypoints;}
 
     /**
      * Returns the number of waypoints yet to be collected.

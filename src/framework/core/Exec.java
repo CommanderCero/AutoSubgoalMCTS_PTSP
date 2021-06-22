@@ -9,6 +9,7 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * This class may be used to execute the game in timed or un-timed modes, with or without
@@ -179,6 +180,15 @@ public class Exec
     {
         //Create the game instance.
         m_game = new Game(mapName);
+        //and the controller
+        return instanceController();
+    }
+
+    protected static boolean prepareGame(String mapName, int numWaypoints, Random rng)
+    {
+        //Create the game instance.
+        m_game = new Game(mapName);
+        m_game.randomizeWaypoints(numWaypoints, rng);
         //and the controller
         return instanceController();
     }

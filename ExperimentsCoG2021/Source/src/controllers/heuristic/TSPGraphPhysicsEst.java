@@ -24,7 +24,7 @@ public class TSPGraphPhysicsEst extends TSPSolver
     /**
      * Number of nodes in the map.
      */
-    public static final int MAX_NODES = 10;
+    public static int MAX_NODES = 10;
 
     /**
      * BEST TSP path found so far.

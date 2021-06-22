@@ -64,9 +64,8 @@ public class ExperimentSteering extends Exec
                 {
                     System.out.println("Running trial " + i + "...");
                     // ... create a new game.
-                    if(!prepareGame(m_mapNames[m]))
+                    if(!prepareGame(m_mapNames[m], NUM_WAYPOINTS, AbstractController.rng))
                         continue;
-                    m_game.randomizeWaypoints(NUM_WAYPOINTS, AbstractController.rng);
 
                     numGamesPlayed++; //another game
 
@@ -167,41 +166,41 @@ public class ExperimentSteering extends Exec
         {
             m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
             AutoSubgoalController.subgoalSearch = new MCTSNoveltySearch(4, new PositionBehaviourFunction(), AbstractController.rng);
-            AutoSubgoalController.explorationRate = highExplorationRate;
-            AutoSubgoalController.maxRolloutDepth = rolloutDepth;
-            MCTSNoveltySearch.explorationRate = lowExplorationRate;
-            MCTSNoveltySearch.maxSteps = steps;
+            //AutoSubgoalController.explorationRate = highExplorationRate;
+            //AutoSubgoalController.maxRolloutDepth = rolloutDepth;
+            //MCTSNoveltySearch.explorationRate = lowExplorationRate;
+            //MCTSNoveltySearch.maxSteps = steps;
         }
         else if(algorithm == "S-MCTS")
         {
             m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-            PositionGridPredicate predicate = new PositionGridPredicate(cellSize, 3);
+            //PositionGridPredicate predicate = new PositionGridPredicate(cellSize, 3);
             RandomPredicateSearch.treatHorizonStatesAsSubgoals = true; // Now it behaves like S-MCTS
-            AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, steps, AbstractController.rng);
-            AutoSubgoalController.explorationRate = explorationRate;
-            AutoSubgoalController.maxRolloutDepth = rolloutDepth;
+            //AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, steps, AbstractController.rng);
+            //AutoSubgoalController.explorationRate = explorationRate;
+            //AutoSubgoalController.maxRolloutDepth = rolloutDepth;
         }
         else if(algorithm == "MS-MCTS")
         {
             m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController";
-            PositionGridPredicate predicate = new PositionGridPredicate(cellSize, 3);
+            //PositionGridPredicate predicate = new PositionGridPredicate(cellSize, 3);
             RandomPredicateSearch.treatHorizonStatesAsSubgoals = false; // Now it behaves like MS-MCTS
-            AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, steps, AbstractController.rng);
-            AutoSubgoalController.explorationRate = explorationRate;
-            AutoSubgoalController.maxRolloutDepth = rolloutDepth;
+            //AutoSubgoalController.subgoalSearch = new RandomPredicateSearch(predicate, 4, steps, AbstractController.rng);
+            //AutoSubgoalController.explorationRate = explorationRate;
+            //AutoSubgoalController.maxRolloutDepth = rolloutDepth;
         }
         else if(algorithm == "VanillaMCTS")
         {
             m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS";
-            VanillaMCTS.explorationRate = explorationRate;
-            VanillaMCTS.maxRolloutDepth = rolloutDepth;
+            //VanillaMCTS.explorationRate = explorationRate;
+            //VanillaMCTS.maxRolloutDepth = rolloutDepth;
         }
         else if(algorithm == "VanillaGA")
         {
             m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController";
-            GAController.GenomeLength = genomeLength;
-            GAController.PopulationSize = populationSize;
-            GAController.MutationRate = mutationRate;
+            //GAController.GenomeLength = genomeLength;
+            //GAController.PopulationSize = populationSize;
+            //GAController.MutationRate = mutationRate;
         }
         else if(algorithm == "RB-MCTS")
         {

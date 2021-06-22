@@ -38,9 +38,8 @@ public class ExecSync extends Exec
     public static void runGame(boolean visual,int delay)
     {
         //Get the game ready.
-        if(!prepareGame(m_mapNames[0]))
+        if(!prepareGame(m_mapNames[5], 50, AbstractController.rng))
             return;
-        m_game.randomizeWaypoints(20, AbstractController.rng);
 
         //Indicate what are we running
         if(m_verbose) System.out.println("Running " + m_controllerName + " in map " + m_game.getMap().getFilename() + "...");
@@ -111,9 +110,9 @@ public class ExecSync extends Exec
 
         //m_controllerName = "controllers.mcts.MCTSController";
         //m_controllerName = "controllers.greedy.GreedyController"; //Set here the controller name. Leave it to null to play with KeyController.
-        //m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
+        m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.simpleGA.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
-        m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
+        //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.autoSubgoalMCTS.GeneticAlgorithm.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
 
