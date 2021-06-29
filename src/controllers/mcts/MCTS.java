@@ -316,7 +316,7 @@ public class MCTS
         boolean end = false;
         for(int i = 0; !end &&  i < a_move.m_repetitions; ++i)
         {
-            a_game.tick(singleMove);
+            a_game.tickRandom(singleMove);
             m_heightMap[(int)a_game.getShip().s.x][(int)a_game.getShip().s.y]++;
             end = GameEvaluator.isEndGame(a_game);
             //m_currentRoute.add(a_game.getShip().s.copy());

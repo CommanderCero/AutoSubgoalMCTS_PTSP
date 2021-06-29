@@ -35,10 +35,12 @@ public class AutoSubgoalController extends AbstractController
         behaviourFunction = new PositionBehaviourFunction();
         if(subgoalSearch == null)
         {
-            PositionGridPredicate predicate = new PositionGridPredicate(20, 3);
+            //PositionGridPredicate predicate = new PositionGridPredicate(35, 3);
             //RandomPredicateSearch.treatHorizonStatesAsSubgoals = false;
             //subgoalSearch = new RandomPredicateSearch(predicate, 4, 400, rng);
             subgoalSearch = new MCTSNoveltySearch(4, behaviourFunction, rng);
+            MCTSNoveltySearch.explorationRate = Math.sqrt(2);
+            MCTSNoveltySearch.maxSteps = 400;
             //subgoalSearch = new HistoryMCTSNoveltySearch(4, behaviourFunction, rng);
             //subgoalSearch = new ScalarNSLCSearch(behaviourFunction, rng, 200, 5);
         }

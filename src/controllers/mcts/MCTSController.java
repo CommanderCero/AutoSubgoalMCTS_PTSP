@@ -86,7 +86,7 @@ public class MCTSController extends Controller
             for(int i = first; i < GameEvaluator.MACRO_ACTION_LENGTH; ++i)
             {
                 int singleMove = m_lastAction.buildAction();
-                a_game.tick(singleMove);
+                a_game.tickRandom(singleMove);
             }
         }
     }

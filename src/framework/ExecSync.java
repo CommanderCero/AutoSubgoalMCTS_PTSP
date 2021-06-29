@@ -38,7 +38,7 @@ public class ExecSync extends Exec
     public static void runGame(boolean visual,int delay)
     {
         //Get the game ready.
-        if(!prepareGame(m_mapNames[5], 50, AbstractController.rng))
+        if(!prepareGame(m_mapNames[0]))
             return;
 
         //Indicate what are we running
@@ -71,7 +71,7 @@ public class ExecSync extends Exec
                 //System.out.println("Controller overtimed.");
             }
 
-            m_game.tick(action);
+            m_game.tickRandom(action);
 
             //Wait until de next cycle.
             waitStep(delay);
@@ -100,7 +100,7 @@ public class ExecSync extends Exec
      */
     public static void main(String[] args) throws IOException
     {
-        m_mapNames = new String[]{"maps/StageA/ptsp_map01.map", "maps/StageA/ptsp_map02.map",
+        m_mapNames = new String[]{"maps/StageA/ptsp_map40.map", "maps/StageA/ptsp_map02.map",
                 "maps/StageA/ptsp_map08.map", "maps/StageA/ptsp_map19.map",
                 "maps/StageA/ptsp_map24.map", "maps/StageA/ptsp_map35.map",
                 "maps/StageA/ptsp_map40.map", "maps/StageA/ptsp_map45.map",
@@ -108,9 +108,9 @@ public class ExecSync extends Exec
 
         //m_mapNames = new String[]{"test2.txt"};
 
-        //m_controllerName = "controllers.mcts.MCTSController";
+        m_controllerName = "controllers.mcts.MCTSController";
         //m_controllerName = "controllers.greedy.GreedyController"; //Set here the controller name. Leave it to null to play with KeyController.
-        m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
+        //m_controllerName = "controllers.mcts.MCTSController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.simpleGA.GAController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.autoSubgoalMCTS.AutoSubgoalController"; //Set here the controller name. Leave it to null to play with KeyController.
         //m_controllerName = "controllers.autoSubgoalMCTS.VanillaMCTS"; //Set here the controller name. Leave it to null to play with KeyController.

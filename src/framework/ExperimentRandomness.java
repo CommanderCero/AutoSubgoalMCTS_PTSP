@@ -16,8 +16,6 @@ import framework.core.PTSPConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -27,7 +25,7 @@ import java.util.Map;
  * structure should not be changed (although you may create sub-packages in these packages).
  */
 @SuppressWarnings("unused")
-public class ExperimentSteering extends Exec
+public class ExperimentRandomness extends Exec
 {
     /**
      * For running multiple games without visuals, in several maps (m_mapNames)
@@ -40,7 +38,7 @@ public class ExperimentSteering extends Exec
     {
         // Prepare file writer
         ArrayList<Double> scorePerTrial = new ArrayList<>();
-        String csvPath = String.format("%s/%s_%d.csv", outputPath, ALGORITHM, NUM_WAYPOINTS);
+        String csvPath = String.format("%s/%s_%.2f.csv", outputPath, ALGORITHM, Game.randomActionProbability);
         try(CSVWriter writer = new CSVWriter(csvPath, new String[]{"Trial", "MapName", "WaypointsVisited", "Steps", "FmCallsPerAction", "TimePerActionMs"}))
         {
             //Prepare the average results.
@@ -83,7 +81,7 @@ public class ExperimentSteering extends Exec
                         long end = System.currentTimeMillis();
 
                         //Advance the game.
-                        m_game.tick(action);
+                        m_game.tickRandom(action);
 
                         // Track stats
                         fmCallsSum += RewardGame.getCalls();
@@ -140,11 +138,12 @@ public class ExperimentSteering extends Exec
     {
         if(args.length != 2)
         {
-            System.err.println("Expected the name of the algorithm and the number of waypoints");
+            System.err.println("Expected the name of the algorithm and the probability of a random action");
             return;
         }
         String algorithm = args[0];
-        NUM_WAYPOINTS = Integer.parseInt(args[1]);
+        Game.randomActionProbability = Double.parseDouble(args[1]);
+        NUM_WAYPOINTS = 10;
 
         setup(algorithm);
         System.out.println("Running experiment for algorithm " + ALGORITHM + " with " + NUM_WAYPOINTS + " waypoints");

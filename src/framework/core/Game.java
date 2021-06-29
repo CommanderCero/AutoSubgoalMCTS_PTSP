@@ -1,5 +1,6 @@
 package framework.core;
 
+import controllers.autoSubgoalMCTS.AbstractController;
 import framework.utils.Vector2d;
 
 import java.awt.*;
@@ -19,6 +20,8 @@ import java.util.*;
  */
 public class Game
 {
+    public static double randomActionProbability = 0;
+
     /**
      * Map of the game.
      */
@@ -205,6 +208,18 @@ public class Game
 
         //Create the ship of the game and add it to the game objects
         m_ship = new Ship(this, getMap().getStartingPoint());
+    }
+
+    public void tickRandom(int action)
+    {
+        if(AbstractController.rng.nextDouble() < randomActionProbability)
+        {
+            tick(AbstractController.rng.nextInt(Controller.NUM_ACTIONS));
+        }
+        else
+        {
+            tick(action);
+        }
     }
 
     /**

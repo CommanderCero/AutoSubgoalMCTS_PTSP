@@ -23,6 +23,7 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         this.rng = rng;
 
         this.root = new MCTSNode<>(new SearchData());
+        this.root.data.latentState = new double[behaviourFunction.getLatentSize()];
         this.noveltyAccumulator = new RewardAccumulator(0.99);
         this.rewardAccumulator = new RewardAccumulator(0.99);
         this.latentCache = new double[behaviourFunction.getLatentSize()];
@@ -45,10 +46,12 @@ public class MCTSNoveltySearch implements ISubgoalSearch
         MCTSNode<SearchData> currNode = root;
         while(currNode.children.size() == Controller.NUM_ACTIONS && depth < trajectoryLength)
         {
+            behaviourFunction.toLatent(game.getState(), currNode.data.latentState);
             currNode = currNode.selectUCT(explorationRate, rng);
             advanceGame(game, currNode.data.action);
             depth++;
         }
+        behaviourFunction.toLatent(game.getState(), currNode.data.latentState);
 
         // Expansion
         if(depth < trajectoryLength)

@@ -24,7 +24,7 @@ public class NaiveRewardGame extends RewardGame
     protected void tickInternal(Game state, int action)
     {
         int waypointsBefore = state.getWaypointsVisited();
-        state.tick(action);
+        state.tickRandom(action);
         int deltaWaypoints = state.getWaypointsVisited() - waypointsBefore;
 
         addReward(deltaWaypoints > 0 ? (10 * deltaWaypoints) : -1);
