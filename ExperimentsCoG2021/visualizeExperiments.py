@@ -14,7 +14,7 @@ if __name__ == "__main__":
     experiments = {
         "Vanilla MCTS": "./VanillaMCTS/VanillaMCTS_2021_05_25_15_51.csv",
         "S-MCTS": "./S-MCTS/S-MCTS_2021_05_26_12_58.csv",
-        "MS-MCTS": "./MS-MCTS/MS-Subgoal-MCTS_2021_05_26_10_51.csv",
+        #"MS-MCTS": "./MS-MCTS/MS-Subgoal-MCTS_2021_05_26_10_51.csv",
         "QD-S-MCTS": "./QD-S-MCTS/QD-Subgoal-MCTS_2021_05_25_18_18.csv",
     }
     
