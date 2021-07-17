@@ -6,6 +6,7 @@ import controllers.autoSubgoalMCTS.GeneticAlgorithm.Genome;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ISubgoalSearch;
 import controllers.autoSubgoalMCTS.SubgoalSearch.ScalarNSLCSearch.SearchData;
+import framework.core.Controller;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -161,7 +162,7 @@ public class ScalarNSLCSearch implements ISubgoalSearch
     @Override
     public boolean isDone()
     {
-        return subgoalArchive.size() > 5;
+        return subgoalArchive.size() == 3;
     }
 
     @Override
@@ -198,6 +199,7 @@ public class ScalarNSLCSearch implements ISubgoalSearch
                 rewardAccumulator.addReward(baseAction.apply(copy));
                 macroAction.actions.add(baseAction);
             }
+            rewardAccumulator.addReward(rollout(copy, GenomeLength));
 
             // Update data in the genome
             currGenome.data.reward = rewardAccumulator.getRewardSum();
@@ -284,6 +286,19 @@ public class ScalarNSLCSearch implements ISubgoalSearch
         return bestGenome;
     }
 
+    private double rollout(RewardGame state, int currentDepth)
+    {
+        double rewardSum = 0;
+        while(!state.isEnded() && currentDepth <= 15)
+        {
+            BaseAction nextAction = new BaseAction(rng.nextInt(Controller.NUM_ACTIONS));
+            rewardSum += nextAction.apply(state);
+
+            currentDepth++;
+        }
+        return rewardSum;
+    }
+
     private double latentDist(double[] v1, double[] v2)
     {
         double sumSquared = 0;
@@ -294,4 +309,5 @@ public class ScalarNSLCSearch implements ISubgoalSearch
         }
         return Math.sqrt(sumSquared);
     }
+
 }
