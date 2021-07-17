@@ -1,8 +1,12 @@
 package framework;
 
 import controllers.autoSubgoalMCTS.AbstractController;
+import controllers.autoSubgoalMCTS.AutoSubgoalController;
+import controllers.autoSubgoalMCTS.BehaviourFunctions.PositionBehaviourFunction;
 import controllers.autoSubgoalMCTS.RewardGames.NaiveRewardGame;
 import controllers.autoSubgoalMCTS.RewardGames.RewardGame;
+import controllers.autoSubgoalMCTS.SubgoalSearch.MCTSNoveltySearch.MCTSNoveltySearch;
+import controllers.autoSubgoalMCTS.VanillaMCTS;
 import controllers.keycontroller.KeyController;
 import framework.core.*;
 import framework.utils.JEasyFrame;

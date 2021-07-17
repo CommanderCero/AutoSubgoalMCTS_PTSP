@@ -10,11 +10,13 @@ This repository implements a Quality Diversity - Monte Carlo Tree Search algorit
   <dd>Contains the definition and a picture of all maps provided by the PTSP competition.</dd>
   <dt><strong>src</strong></dt>
   <dd>Contains the source code of the framework, including the implementation of various agents.</dd>
+  <dt><strong>ExperimentsThesis</strong></dt>
+  <dd>Contains the results of the experiments for my master thesis. The code for running the experiments can be found in src/framework.</dd>
   <dt><strong>ExperimentsCoG2021</strong></dt>
   <dd>Contains the results of the experiments for a paper submitted to CoG 2021. For more details, see the corresponding subsection below.</dd>
 </dl>
 
-You can find the QD-MCTS algorithm under "src/controllers/autoSubgoalMCTS". Note that this subfolder contains various agents. **MyMCTSController** implements the vanilla MCTS algorithm with tree reuse. The **AutoSubgoalController** implements both Subgoal MCTS and QD-MCTS. This controller implements a Subgoal MCTS algorithm that runs a subgoal search in each leaf node. The used subgoal search essentially decides if it's a vanilla Subgoal MCTS algorithm or QD-MCTS. The different subgoal searches are defined in the folder "SubgoalSearch".
+You can find the QD-MCTS algorithm under "src/controllers/autoSubgoalMCTS". Note that this subfolder contains various agents. **VanillaMCTS** implements the vanilla MCTS algorithm with tree reuse. The **AutoSubgoalController** implements both Subgoal MCTS and QD-MCTS. This controller implements a Subgoal MCTS algorithm that runs a subgoal search in each leaf node. The used subgoal search essentially decides if it's a vanilla Subgoal MCTS algorithm or QD-MCTS. The different subgoal searches are defined in the folder "SubgoalSearch".
 
 ## CoG 2021
 The folder **ExperimentsCoG2021**  contains subfolders with all the results of the tested algorithms. Each subfolder contains a .csv containing data like waypoints visited or how many steps were taken. Additionally, the subfolder contains a bunch of textfiles representing the trajectory for each trial.
